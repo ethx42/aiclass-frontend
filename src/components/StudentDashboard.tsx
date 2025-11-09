@@ -6,8 +6,10 @@ import { useAuthStore } from '@/src/lib/stores/auth-store';
 import { useEnrollments } from '@/src/lib/hooks/use-enrollments';
 import { EnrollmentCard } from './EnrollmentCard';
 import { EnrollmentStatus } from '@/src/types/api';
+import { useT } from '@/src/lib/i18n/provider';
 
 export function StudentDashboard() {
+  const t = useT();
   const user = useAuthStore((state) => state.user);
   const { data, isLoading, error } = useEnrollments({
     studentId: user?.id,
@@ -31,7 +33,7 @@ export function StudentDashboard() {
           <Callout.Icon>
             <InfoCircledIcon />
           </Callout.Icon>
-          <Callout.Text>Failed to load enrollments. Please try again.</Callout.Text>
+          <Callout.Text>{t('class.failedToLoad')}</Callout.Text>
         </Callout.Root>
       </Box>
     );
@@ -44,10 +46,10 @@ export function StudentDashboard() {
       <Flex direction="column" gap="6">
         <Box>
           <Heading size="8" mb="2">
-            My Classes
+            {t('dashboard.myClasses')}
           </Heading>
           <Text size="3" color="gray">
-            View your enrolled classes and track your progress
+            {t('dashboard.viewClasses')}
           </Text>
         </Box>
 
@@ -65,10 +67,10 @@ export function StudentDashboard() {
             }}
           >
             <Text size="4" color="gray">
-              You are not enrolled in any classes yet
+              {t('dashboard.notEnrolled')}
             </Text>
             <Text size="2" color="gray">
-              Contact your teacher to be added to a class
+              {t('dashboard.contactTeacher')}
             </Text>
           </Flex>
         ) : (

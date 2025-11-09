@@ -6,10 +6,13 @@ import { useAuth } from '@/src/lib/hooks/use-auth';
 import { Box, Card, Flex, Heading, TextField, Button, Text, Callout } from '@radix-ui/themes';
 import { InfoCircledIcon, CheckIcon } from '@radix-ui/react-icons';
 import Link from 'next/link';
+import { LanguageSelector } from '@/src/components/LanguageSelector';
+import { useT } from '@/src/lib/i18n/provider';
 
 export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const t = useT();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -51,6 +54,10 @@ export default function LoginPage() {
       <Box style={{ width: '100%', maxWidth: '400px', padding: '20px' }}>
         <Card size="4">
           <Flex direction="column" gap="4">
+            <Flex justify="end">
+              <LanguageSelector />
+            </Flex>
+            
             <Box style={{ textAlign: 'center' }}>
               <Heading size="8" mb="2">
                 AIClass
@@ -66,7 +73,7 @@ export default function LoginPage() {
                   <CheckIcon />
                 </Callout.Icon>
                 <Callout.Text>
-                  Account created successfully! Please log in.
+                  {t('auth.signupSuccess')}
                 </Callout.Text>
               </Callout.Root>
             )}
@@ -84,11 +91,11 @@ export default function LoginPage() {
               <Flex direction="column" gap="3">
                 <Box>
                   <Text as="label" size="2" weight="bold" mb="1">
-                    Email
+                    {t('auth.email')}
                   </Text>
                   <TextField.Root
                     type="email"
-                    placeholder="Enter your email"
+                    placeholder={t('auth.email')}
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
@@ -98,11 +105,11 @@ export default function LoginPage() {
 
                 <Box>
                   <Text as="label" size="2" weight="bold" mb="1">
-                    Password
+                    {t('auth.password')}
                   </Text>
                   <TextField.Root
                     type="password"
-                    placeholder="Enter your password"
+                    placeholder={t('auth.password')}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
@@ -116,18 +123,18 @@ export default function LoginPage() {
                   disabled={isLoading}
                   style={{ marginTop: '8px' }}
                 >
-                  {isLoading ? 'Logging in...' : 'Log In'}
+                  {isLoading ? t('auth.loggingIn') : t('auth.login')}
                 </Button>
               </Flex>
             </form>
 
             <Flex justify="center" gap="2" style={{ marginTop: '12px' }}>
               <Text size="2" color="gray">
-                Don't have an account?
+                {t('auth.dontHaveAccount')}
               </Text>
               <Link href="/signup" style={{ textDecoration: 'none' }}>
                 <Text size="2" color="blue" style={{ cursor: 'pointer' }}>
-                  Sign Up
+                  {t('auth.signup')}
                 </Text>
               </Link>
             </Flex>

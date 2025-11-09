@@ -6,9 +6,11 @@ import { useAuthStore } from '@/src/lib/stores/auth-store';
 import { useClasses } from '@/src/lib/hooks/use-classes';
 import { ClassCard } from './ClassCard';
 import { useRouter } from 'next/navigation';
+import { useT } from '@/src/lib/i18n/provider';
 
 export function TeacherDashboard() {
   const router = useRouter();
+  const t = useT();
   const user = useAuthStore((state) => state.user);
   const { data, isLoading, error } = useClasses({ teacherId: user?.id, page: 0, size: 50 });
 
@@ -31,7 +33,7 @@ export function TeacherDashboard() {
           <Callout.Icon>
             <InfoCircledIcon />
           </Callout.Icon>
-          <Callout.Text>Failed to load classes. Please try again.</Callout.Text>
+          <Callout.Text>{t('class.failedToLoad')}</Callout.Text>
         </Callout.Root>
       </Box>
     );
@@ -45,18 +47,18 @@ export function TeacherDashboard() {
         <Flex justify="between" align="center">
           <Box>
             <Heading size="8" mb="2">
-              My Classes
+              {t('dashboard.myClasses')}
             </Heading>
             <Text size="3" color="gray">
-              Manage your classes and track student performance
+              {t('dashboard.manageClasses')}
             </Text>
           </Box>
           <Flex gap="3">
             <Button size="3" variant="soft" onClick={() => router.push('/subjects')}>
-              Manage Subjects
+              {t('dashboard.manageSubjects')}
             </Button>
             <Button size="3" onClick={handleCreateClass}>
-              <PlusIcon /> Create Class
+              <PlusIcon /> {t('dashboard.createClass')}
             </Button>
           </Flex>
         </Flex>
@@ -75,10 +77,10 @@ export function TeacherDashboard() {
             }}
           >
             <Text size="4" color="gray">
-              No classes yet
+              {t('dashboard.noClassesYet')}
             </Text>
             <Button size="2" variant="soft" onClick={handleCreateClass}>
-              <PlusIcon /> Create Your First Class
+              <PlusIcon /> {t('dashboard.createFirstClass')}
             </Button>
           </Flex>
         ) : (

@@ -1,6 +1,9 @@
+"use client";
+
 import { Card, Flex, Heading, Text, Badge, Box } from "@radix-ui/themes";
 import { ClassResponse, Semester } from "@/src/types/api";
 import Link from "next/link";
+import { useT } from "@/src/lib/i18n/provider";
 
 interface ClassCardProps {
   classData: ClassResponse;
@@ -24,6 +27,8 @@ const getSemesterColor = (
 };
 
 export function ClassCard({ classData }: ClassCardProps) {
+  const t = useT();
+
   return (
     <Link href={`/class/${classData.id}`} style={{ textDecoration: "none" }}>
       <Card
@@ -44,13 +49,15 @@ export function ClassCard({ classData }: ClassCardProps) {
               </Text>
             </Box>
             <Badge color={getSemesterColor(classData?.semester)} size="2">
-              {classData?.semester} {classData?.year}
+              {t(`class.${classData?.semester?.toLowerCase() || "fall"}`)}{" "}
+              {classData?.year}
             </Badge>
           </Flex>
 
           <Flex gap="2" align="center">
             <Text size="1" color="gray">
-              Group: <Text weight="bold">{classData?.groupCode}</Text>
+              {t("class.group")}:{" "}
+              <Text weight="bold">{classData?.groupCode}</Text>
             </Text>
             {classData?.schedule && (
               <>

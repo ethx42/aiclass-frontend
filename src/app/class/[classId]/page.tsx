@@ -34,10 +34,12 @@ import { useEnrollments } from "@/src/lib/hooks/use-enrollments";
 import { UserRole, Semester, ClassResponse } from "@/src/types/api";
 import { TeacherClassView } from "@/src/components/TeacherClassView";
 import { StudentClassView } from "@/src/components/StudentClassView";
+import { useT } from "@/src/lib/i18n/provider";
 
 export default function ClassDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const t = useT();
   const classId = params.classId as string;
   const user = useAuthStore((state) => state.user);
 
@@ -138,7 +140,7 @@ export default function ClassDetailPage() {
     } catch (err: unknown) {
       const errorMessage =
         (err as { response?: { data?: { message?: string } } })?.response?.data
-          ?.message || "Failed to update class";
+          ?.message || t("class.failedToLoad");
       setEditError(errorMessage);
     }
   };
@@ -169,8 +171,8 @@ export default function ClassDetailPage() {
           </Callout.Icon>
           <Callout.Text>
             {isTeacher
-              ? "Failed to load class. Please try again."
-              : "Failed to load class. You may not be enrolled in this class."}
+              ? t("class.failedToLoad")
+              : t("class.notEnrolledInClass")}
           </Callout.Text>
         </Callout.Root>
       </Box>
@@ -184,9 +186,7 @@ export default function ClassDetailPage() {
           <Callout.Icon>
             <InfoCircledIcon />
           </Callout.Icon>
-          <Callout.Text>
-            Class not found or you don&apos;t have access to view it.
-          </Callout.Text>
+          <Callout.Text>{t("class.classNotFound")}</Callout.Text>
         </Callout.Root>
       </Box>
     );
@@ -207,7 +207,7 @@ export default function ClassDetailPage() {
             style={{ width: "fit-content" }}
             onClick={() => router.push("/dashboard")}
           >
-            <ArrowLeftIcon /> Back to Dashboard
+            <ArrowLeftIcon /> {t("navigation.backToDashboard")}
           </Button>
 
           <Flex justify="between" align="center">
@@ -220,10 +220,13 @@ export default function ClassDetailPage() {
                 style={{ fontSize: "14px", color: "var(--gray-11)" }}
               >
                 <span>
-                  {classData.semester} {classData.year}
+                  {t(`class.${classData.semester?.toLowerCase() || "fall"}`)}{" "}
+                  {classData.year}
                 </span>
                 <span>•</span>
-                <span>Group {classData.groupCode}</span>
+                <span>
+                  {t("class.group")} {classData.groupCode}
+                </span>
                 {classData.schedule && (
                   <>
                     <span>•</span>
@@ -239,7 +242,7 @@ export default function ClassDetailPage() {
                   variant="soft"
                   onClick={() => router.push(`/class/${classId}/roster`)}
                 >
-                  Manage Roster
+                  {t("class.manageRoster")}
                 </Button>
                 <DropdownMenu.Root>
                   <DropdownMenu.Trigger>
@@ -249,14 +252,14 @@ export default function ClassDetailPage() {
                   </DropdownMenu.Trigger>
                   <DropdownMenu.Content>
                     <DropdownMenu.Item onClick={handleEditClick}>
-                      <Pencil1Icon /> Edit Class
+                      <Pencil1Icon /> {t("class.editClass")}
                     </DropdownMenu.Item>
                     <DropdownMenu.Separator />
                     <DropdownMenu.Item
                       color="red"
                       onClick={() => setIsDeleteDialogOpen(true)}
                     >
-                      <TrashIcon /> Delete Class
+                      <TrashIcon /> {t("class.deleteClass")}
                     </DropdownMenu.Item>
                   </DropdownMenu.Content>
                 </DropdownMenu.Root>
@@ -276,9 +279,9 @@ export default function ClassDetailPage() {
       {/* Edit Dialog */}
       <Dialog.Root open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <Dialog.Content style={{ maxWidth: 500 }}>
-          <Dialog.Title>Edit Class</Dialog.Title>
+          <Dialog.Title>{t("class.editClass")}</Dialog.Title>
           <Dialog.Description size="2" mb="4">
-            Update the class details below
+            {t("class.updateClassDetails")}
           </Dialog.Description>
 
           <Flex direction="column" gap="3">
@@ -294,7 +297,7 @@ export default function ClassDetailPage() {
             {/* Subject Selection */}
             <Box>
               <Text as="label" size="2" weight="bold" mb="1">
-                Subject *
+                {t("class.subject")} *
               </Text>
               <Select.Root
                 value={formData.subjectId}
@@ -304,13 +307,13 @@ export default function ClassDetailPage() {
                 required
               >
                 <Select.Trigger
-                  placeholder="Select a subject"
+                  placeholder={t("class.selectSubject")}
                   style={{ width: "100%" }}
                 />
                 <Select.Content>
                   {loadingSubjects ? (
                     <Select.Item value="loading" disabled>
-                      Loading...
+                      {t("common.loading")}
                     </Select.Item>
                   ) : (
                     subjects.map((subject) => (
@@ -326,7 +329,7 @@ export default function ClassDetailPage() {
             {/* Year */}
             <Box>
               <Text as="label" size="2" weight="bold" mb="1">
-                Year *
+                {t("class.year")} *
               </Text>
               <TextField.Root
                 type="number"
@@ -343,7 +346,7 @@ export default function ClassDetailPage() {
             {/* Semester */}
             <Box>
               <Text as="label" size="2" weight="bold" mb="1">
-                Semester *
+                {t("class.semester")} *
               </Text>
               <Select.Root
                 value={formData.semester}
@@ -354,10 +357,18 @@ export default function ClassDetailPage() {
               >
                 <Select.Trigger style={{ width: "100%" }} />
                 <Select.Content>
-                  <Select.Item value={Semester.SPRING}>Spring</Select.Item>
-                  <Select.Item value={Semester.SUMMER}>Summer</Select.Item>
-                  <Select.Item value={Semester.FALL}>Fall</Select.Item>
-                  <Select.Item value={Semester.WINTER}>Winter</Select.Item>
+                  <Select.Item value={Semester.SPRING}>
+                    {t("class.spring")}
+                  </Select.Item>
+                  <Select.Item value={Semester.SUMMER}>
+                    {t("class.summer")}
+                  </Select.Item>
+                  <Select.Item value={Semester.FALL}>
+                    {t("class.fall")}
+                  </Select.Item>
+                  <Select.Item value={Semester.WINTER}>
+                    {t("class.winter")}
+                  </Select.Item>
                 </Select.Content>
               </Select.Root>
             </Box>
@@ -365,7 +376,7 @@ export default function ClassDetailPage() {
             {/* Group Code */}
             <Box>
               <Text as="label" size="2" weight="bold" mb="1">
-                Group Code *
+                {t("class.groupCode")} *
               </Text>
               <TextField.Root
                 placeholder="e.g., A, B, 101"
@@ -380,7 +391,7 @@ export default function ClassDetailPage() {
             {/* Schedule */}
             <Box>
               <Text as="label" size="2" weight="bold" mb="1">
-                Schedule (Optional)
+                {t("class.schedule")} ({t("class.optional")})
               </Text>
               <TextField.Root
                 placeholder="e.g., Mon/Wed/Fri 10:00-11:30"
@@ -394,7 +405,7 @@ export default function ClassDetailPage() {
             <Flex gap="3" justify="end" mt="2">
               <Dialog.Close>
                 <Button variant="soft" color="gray">
-                  Cancel
+                  {t("common.cancel")}
                 </Button>
               </Dialog.Close>
               <Button
@@ -406,7 +417,9 @@ export default function ClassDetailPage() {
                   !formData.year
                 }
               >
-                {updateClass.isPending ? "Saving..." : "Save Changes"}
+                {updateClass.isPending
+                  ? t("class.saving")
+                  : t("common.save") + " " + t("class.class")}
               </Button>
             </Flex>
           </Flex>
@@ -419,16 +432,15 @@ export default function ClassDetailPage() {
         onOpenChange={setIsDeleteDialogOpen}
       >
         <AlertDialog.Content style={{ maxWidth: 450 }}>
-          <AlertDialog.Title>Delete Class</AlertDialog.Title>
+          <AlertDialog.Title>{t("class.deleteClass")}</AlertDialog.Title>
           <AlertDialog.Description size="2">
-            Are you sure you want to delete this class? This action cannot be
-            undone. All associated grades and enrollments will also be affected.
+            {t("class.deleteConfirm")}
           </AlertDialog.Description>
 
           <Flex gap="3" mt="4" justify="end">
             <AlertDialog.Cancel>
               <Button variant="soft" color="gray">
-                Cancel
+                {t("common.cancel")}
               </Button>
             </AlertDialog.Cancel>
             <AlertDialog.Action>
@@ -437,7 +449,9 @@ export default function ClassDetailPage() {
                 onClick={handleDelete}
                 disabled={deleteClass.isPending}
               >
-                {deleteClass.isPending ? "Deleting..." : "Delete Class"}
+                {deleteClass.isPending
+                  ? t("class.deleting")
+                  : t("class.deleteClass")}
               </Button>
             </AlertDialog.Action>
           </Flex>

@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
+import { useState } from "react";
 import {
   Box,
   Button,
@@ -14,82 +14,113 @@ import {
   Spinner,
   Callout,
   IconButton,
-} from '@radix-ui/themes';
-import { PlusIcon, InfoCircledIcon, Pencil1Icon, CheckIcon, Cross2Icon } from '@radix-ui/react-icons';
-import { useEnrollments } from '@/src/lib/hooks/use-enrollments';
-import { useGrades, useCreateGrade, useUpdateGrade } from '@/src/lib/hooks/use-grades';
-import { AssessmentKind, EnrollmentStatus, GradeResponse } from '@/src/types/api';
+} from "@radix-ui/themes";
+import {
+  PlusIcon,
+  InfoCircledIcon,
+  Pencil1Icon,
+  CheckIcon,
+  Cross2Icon,
+} from "@radix-ui/react-icons";
+import { useEnrollments } from "@/src/lib/hooks/use-enrollments";
+import {
+  useGrades,
+  useCreateGrade,
+  useUpdateGrade,
+} from "@/src/lib/hooks/use-grades";
+import {
+  AssessmentKind,
+  EnrollmentStatus,
+  GradeResponse,
+} from "@/src/types/api";
+import { useT } from "@/src/lib/i18n/provider";
 
 interface TeacherClassViewProps {
   classId: string;
 }
 
-interface GradeFormData {
-  studentId: string;
+interface AssessmentFormData {
   assessmentKind: AssessmentKind;
   assessmentName: string;
-  score: number;
   maxScore: number;
 }
 
 export function TeacherClassView({ classId }: TeacherClassViewProps) {
-  const { data: enrollmentsData, isLoading: loadingEnrollments } = useEnrollments({
-    classId,
-    status: EnrollmentStatus.ACTIVE,
-    page: 0,
-    size: 100,
-  });
+  const t = useT();
+  const { data: enrollmentsData, isLoading: loadingEnrollments } =
+    useEnrollments({
+      classId,
+      status: EnrollmentStatus.ACTIVE,
+      page: 0,
+      size: 100,
+    });
 
-  const { data: gradesData, isLoading: loadingGrades } = useGrades({ classId, page: 0, size: 1000 });
+  const { data: gradesData, isLoading: loadingGrades } = useGrades({
+    classId,
+    page: 0,
+    size: 1000,
+  });
 
   const createGrade = useCreateGrade();
   const updateGrade = useUpdateGrade();
 
-  const [isAddGradeDialogOpen, setIsAddGradeDialogOpen] = useState(false);
-  const [isAddAssessmentDialogOpen, setIsAddAssessmentDialogOpen] = useState(false);
+  const [isAddAssessmentDialogOpen, setIsAddAssessmentDialogOpen] =
+    useState(false);
   const [editingGradeId, setEditingGradeId] = useState<string | null>(null);
-  const [editingCell, setEditingCell] = useState<{ studentId: string; assessment: string } | null>(null);
-  const [editScore, setEditScore] = useState('');
-  const [newScore, setNewScore] = useState('');
-  const [error, setError] = useState('');
+  const [editingCell, setEditingCell] = useState<{
+    studentId: string;
+    assessment: string;
+  } | null>(null);
+  const [editScore, setEditScore] = useState("");
+  const [newScore, setNewScore] = useState("");
+  const [error, setError] = useState("");
 
-  const [gradeFormData, setGradeFormData] = useState<GradeFormData>({
-    studentId: '',
-    assessmentKind: AssessmentKind.EXAM,
-    assessmentName: '',
-    score: 0,
-    maxScore: 100,
-  });
-
-  const [assessmentFormData, setAssessmentFormData] = useState({
-    assessmentKind: AssessmentKind.EXAM,
-    assessmentName: '',
-    maxScore: 100,
-  });
+  const [assessmentFormData, setAssessmentFormData] =
+    useState<AssessmentFormData>({
+      assessmentKind: AssessmentKind.EXAM,
+      assessmentName: "",
+      maxScore: 100,
+    });
 
   const enrollments = enrollmentsData?.data?.content || [];
   const grades = gradesData?.data?.content || [];
 
-  const handleAddGrade = async () => {
-    setError('');
+  const handleAddAssessment = async () => {
+    setError("");
+
+    if (!assessmentFormData.assessmentName.trim()) {
+      setError("Assessment name is required");
+      return;
+    }
+
+    // Create the assessment by adding a grade for the first student with score 0
+    // This creates the column in the gradebook
+    const firstStudent = enrollments[0];
+    if (!firstStudent) {
+      setError("No students enrolled");
+      return;
+    }
+
     try {
       await createGrade.mutateAsync({
         classId,
-        ...gradeFormData,
+        studentId: firstStudent.studentId,
+        assessmentKind: assessmentFormData.assessmentKind,
+        assessmentName: assessmentFormData.assessmentName,
+        score: 0,
+        maxScore: assessmentFormData.maxScore,
         gradedAt: new Date().toISOString(),
       });
-      setIsAddGradeDialogOpen(false);
-      setGradeFormData({
-        studentId: '',
+      setIsAddAssessmentDialogOpen(false);
+      setAssessmentFormData({
         assessmentKind: AssessmentKind.EXAM,
-        assessmentName: '',
-        score: 0,
+        assessmentName: "",
         maxScore: 100,
       });
     } catch (err: unknown) {
       const errorMessage =
         (err as { response?: { data?: { message?: string } } })?.response?.data
-          ?.message || 'Failed to add grade';
+          ?.message || "Failed to create assessment";
       setError(errorMessage);
     }
   };
@@ -108,42 +139,32 @@ export function TeacherClassView({ classId }: TeacherClassViewProps) {
         },
       });
       setEditingGradeId(null);
-      setEditScore('');
+      setEditScore("");
     } catch (err) {
-      console.error('Failed to update grade:', err);
+      console.error("Failed to update grade:", err);
     }
   };
 
   const handleCancelEdit = () => {
     setEditingGradeId(null);
-    setEditScore('');
-  };
-
-  const handleAddAssessment = async () => {
-    setError('');
-    // This creates the assessment column (will show as "-" for all students initially)
-    // The assessment will appear once any student has a grade for it
-    setIsAddAssessmentDialogOpen(false);
-    setAssessmentFormData({
-      assessmentKind: AssessmentKind.EXAM,
-      assessmentName: '',
-      maxScore: 100,
-    });
+    setEditScore("");
   };
 
   const handleCellClick = (studentId: string, assessment: string) => {
     setEditingCell({ studentId, assessment });
-    setNewScore('');
+    setNewScore("");
   };
 
   const handleSaveNewGrade = async () => {
     if (!editingCell) return;
 
-    const [kind, name] = editingCell.assessment.split(':');
+    const [kind, name] = editingCell.assessment.split(":");
     const assessment = assessments.find((a) => a === editingCell.assessment);
-    
+
     // Get maxScore from existing grade with this assessment or use default
-    const existingGrade = grades.find((g) => `${g.assessmentKind}:${g.assessmentName}` === assessment);
+    const existingGrade = grades.find(
+      (g) => `${g.assessmentKind}:${g.assessmentName}` === assessment
+    );
     const maxScore = existingGrade?.maxScore || 100;
 
     try {
@@ -157,15 +178,15 @@ export function TeacherClassView({ classId }: TeacherClassViewProps) {
         gradedAt: new Date().toISOString(),
       });
       setEditingCell(null);
-      setNewScore('');
+      setNewScore("");
     } catch (err) {
-      console.error('Failed to add grade:', err);
+      console.error("Failed to add grade:", err);
     }
   };
 
   const handleCancelNewGrade = () => {
     setEditingCell(null);
-    setNewScore('');
+    setNewScore("");
   };
 
   // Group grades by student
@@ -185,7 +206,7 @@ export function TeacherClassView({ classId }: TeacherClassViewProps) {
 
   if (loadingEnrollments || loadingGrades) {
     return (
-      <Flex align="center" justify="center" style={{ minHeight: '50vh' }}>
+      <Flex align="center" justify="center" style={{ minHeight: "50vh" }}>
         <Spinner size="3" />
       </Flex>
     );
@@ -198,23 +219,28 @@ export function TeacherClassView({ classId }: TeacherClassViewProps) {
           <Flex justify="between" align="center">
             <Box>
               <Text size="5" weight="bold">
-                Gradebook
+                {t("grades.gradebook")}
               </Text>
+              <br />
               <Text size="2" color="gray">
-                {enrollments.length} students enrolled · Click on empty cells (-) to add grades
+                {enrollments.length} {t("grades.studentsEnrolled")} ·{" "}
+                {t("grades.clickEmptyCells")}
               </Text>
             </Box>
-            <Dialog.Root open={isAddGradeDialogOpen} onOpenChange={setIsAddGradeDialogOpen}>
+            <Dialog.Root
+              open={isAddAssessmentDialogOpen}
+              onOpenChange={setIsAddAssessmentDialogOpen}
+            >
               <Dialog.Trigger>
                 <Button>
-                  <PlusIcon /> Add Grade
+                  <PlusIcon /> {t("grades.addGrade")}
                 </Button>
               </Dialog.Trigger>
 
               <Dialog.Content style={{ maxWidth: 500 }}>
-                <Dialog.Title>Add Grade</Dialog.Title>
+                <Dialog.Title>{t("grades.addGrade")}</Dialog.Title>
                 <Dialog.Description size="2" mb="4">
-                  Enter grade information for a student
+                  {t("grades.createAssessment")}
                 </Dialog.Description>
 
                 <Flex direction="column" gap="3">
@@ -229,113 +255,94 @@ export function TeacherClassView({ classId }: TeacherClassViewProps) {
 
                   <Box>
                     <Text as="label" size="2" weight="bold" mb="1">
-                      Student
+                      {t("grades.assessmentType")} *
                     </Text>
                     <Select.Root
-                      value={gradeFormData.studentId}
+                      value={assessmentFormData.assessmentKind}
                       onValueChange={(value) =>
-                        setGradeFormData({ ...gradeFormData, studentId: value })
-                      }
-                    >
-                      <Select.Trigger placeholder="Select student" style={{ width: '100%' }} />
-                      <Select.Content>
-                        {enrollments.map((enrollment) => (
-                          <Select.Item key={enrollment.studentId} value={enrollment.studentId}>
-                            {enrollment.studentName}
-                          </Select.Item>
-                        ))}
-                      </Select.Content>
-                    </Select.Root>
-                  </Box>
-
-                  <Box>
-                    <Text as="label" size="2" weight="bold" mb="1">
-                      Assessment Type
-                    </Text>
-                    <Select.Root
-                      value={gradeFormData.assessmentKind}
-                      onValueChange={(value) =>
-                        setGradeFormData({
-                          ...gradeFormData,
+                        setAssessmentFormData({
+                          ...assessmentFormData,
                           assessmentKind: value as AssessmentKind,
                         })
                       }
                     >
-                      <Select.Trigger style={{ width: '100%' }} />
+                      <Select.Trigger style={{ width: "100%" }} />
                       <Select.Content>
-                        <Select.Item value={AssessmentKind.EXAM}>Exam</Select.Item>
-                        <Select.Item value={AssessmentKind.QUIZ}>Quiz</Select.Item>
-                        <Select.Item value={AssessmentKind.HOMEWORK}>Homework</Select.Item>
-                        <Select.Item value={AssessmentKind.PROJECT}>Project</Select.Item>
+                        <Select.Item value={AssessmentKind.EXAM}>
+                          {t("grades.exam")}
+                        </Select.Item>
+                        <Select.Item value={AssessmentKind.QUIZ}>
+                          {t("grades.quiz")}
+                        </Select.Item>
+                        <Select.Item value={AssessmentKind.HOMEWORK}>
+                          {t("grades.homework")}
+                        </Select.Item>
+                        <Select.Item value={AssessmentKind.PROJECT}>
+                          {t("grades.project")}
+                        </Select.Item>
                       </Select.Content>
                     </Select.Root>
                   </Box>
 
                   <Box>
                     <Text as="label" size="2" weight="bold" mb="1">
-                      Assessment Name
+                      {t("grades.assessmentName")} *
                     </Text>
                     <TextField.Root
                       placeholder="e.g., Midterm Exam"
-                      value={gradeFormData.assessmentName}
+                      value={assessmentFormData.assessmentName}
                       onChange={(e) =>
-                        setGradeFormData({ ...gradeFormData, assessmentName: e.target.value })
+                        setAssessmentFormData({
+                          ...assessmentFormData,
+                          assessmentName: e.target.value,
+                        })
                       }
                     />
                   </Box>
 
-                  <Flex gap="3">
-                    <Box style={{ flex: 1 }}>
-                      <Text as="label" size="2" weight="bold" mb="1">
-                        Score
-                      </Text>
-                      <TextField.Root
-                        type="number"
-                        value={gradeFormData.score.toString()}
-                        onChange={(e) =>
-                          setGradeFormData({
-                            ...gradeFormData,
-                            score: parseFloat(e.target.value),
-                          })
-                        }
-                        min="0"
-                        step="0.1"
-                      />
-                    </Box>
-                    <Box style={{ flex: 1 }}>
-                      <Text as="label" size="2" weight="bold" mb="1">
-                        Max Score
-                      </Text>
-                      <TextField.Root
-                        type="number"
-                        value={gradeFormData.maxScore.toString()}
-                        onChange={(e) =>
-                          setGradeFormData({
-                            ...gradeFormData,
-                            maxScore: parseFloat(e.target.value),
-                          })
-                        }
-                        min="1"
-                        step="0.1"
-                      />
-                    </Box>
-                  </Flex>
+                  <Box>
+                    <Text as="label" size="2" weight="bold" mb="1">
+                      {t("grades.maxScore")} *
+                    </Text>
+                    <TextField.Root
+                      type="number"
+                      value={assessmentFormData.maxScore.toString()}
+                      onChange={(e) =>
+                        setAssessmentFormData({
+                          ...assessmentFormData,
+                          maxScore: parseFloat(e.target.value),
+                        })
+                      }
+                      min="1"
+                      step="0.1"
+                    />
+                  </Box>
+
+                  <Callout.Root color="blue" size="1">
+                    <Callout.Icon>
+                      <InfoCircledIcon />
+                    </Callout.Icon>
+                    <Callout.Text>
+                      {t("grades.createAssessmentHint")}
+                    </Callout.Text>
+                  </Callout.Root>
 
                   <Flex gap="3" justify="end" mt="2">
                     <Dialog.Close>
                       <Button variant="soft" color="gray">
-                        Cancel
+                        {t("common.cancel")}
                       </Button>
                     </Dialog.Close>
                     <Button
-                      onClick={handleAddGrade}
+                      onClick={handleAddAssessment}
                       disabled={
                         createGrade.isPending ||
-                        !gradeFormData.studentId ||
-                        !gradeFormData.assessmentName
+                        !assessmentFormData.assessmentName.trim()
                       }
                     >
-                      {createGrade.isPending ? 'Adding...' : 'Add Grade'}
+                      {createGrade.isPending
+                        ? t("class.creating")
+                        : t("common.create") + " " + t("grades.assessment")}
                     </Button>
                   </Flex>
                 </Flex>
@@ -344,8 +351,8 @@ export function TeacherClassView({ classId }: TeacherClassViewProps) {
           </Flex>
 
           {enrollments.length === 0 ? (
-            <Text color="gray" style={{ textAlign: 'center', padding: '40px' }}>
-              No students enrolled. Add students from the roster page.
+            <Text color="gray" style={{ textAlign: "center", padding: "40px" }}>
+              {t("roster.noStudentsEnrolled")}
             </Text>
           ) : grades.length === 0 ? (
             <Flex
@@ -353,31 +360,39 @@ export function TeacherClassView({ classId }: TeacherClassViewProps) {
               align="center"
               justify="center"
               gap="3"
-              style={{ padding: '40px' }}
+              style={{ padding: "40px" }}
             >
-              <Text color="gray">No grades yet</Text>
-              <Button variant="soft" onClick={() => setIsAddGradeDialogOpen(true)}>
-                <PlusIcon /> Add First Grade
+              <Text color="gray">{t("grades.noGrades")}</Text>
+              <Button
+                variant="soft"
+                onClick={() => setIsAddAssessmentDialogOpen(true)}
+              >
+                <PlusIcon /> {t("grades.addFirstGrade")}
               </Button>
             </Flex>
           ) : (
-            <Box style={{ overflowX: 'auto' }}>
+            <Box style={{ overflowX: "auto" }}>
               <Table.Root>
                 <Table.Header>
                   <Table.Row>
-                    <Table.ColumnHeaderCell>Student</Table.ColumnHeaderCell>
+                    <Table.ColumnHeaderCell>
+                      {t("grades.student")}
+                    </Table.ColumnHeaderCell>
                     {assessments.map((assessment) => (
                       <Table.ColumnHeaderCell key={assessment}>
-                        {assessment.split(':')[1]}
+                        {assessment.split(":")[1]}
                       </Table.ColumnHeaderCell>
                     ))}
-                    <Table.ColumnHeaderCell>Average</Table.ColumnHeaderCell>
+                    <Table.ColumnHeaderCell>
+                      {t("grades.average")}
+                    </Table.ColumnHeaderCell>
                   </Table.Row>
                 </Table.Header>
 
                 <Table.Body>
                   {enrollments.map((enrollment) => {
-                    const studentGrades = gradesByStudent[enrollment.studentId] || [];
+                    const studentGrades =
+                      gradesByStudent[enrollment.studentId] || [];
                     const average =
                       studentGrades.length > 0
                         ? (
@@ -386,7 +401,7 @@ export function TeacherClassView({ classId }: TeacherClassViewProps) {
                               0
                             ) / studentGrades.length
                           ).toFixed(1)
-                        : '-';
+                        : "-";
 
                     return (
                       <Table.Row key={enrollment.id}>
@@ -395,13 +410,15 @@ export function TeacherClassView({ classId }: TeacherClassViewProps) {
                         </Table.Cell>
                         {assessments.map((assessment) => {
                           const grade = studentGrades.find(
-                            (g) => `${g.assessmentKind}:${g.assessmentName}` === assessment
+                            (g) =>
+                              `${g.assessmentKind}:${g.assessmentName}` ===
+                              assessment
                           );
-                          
-                          const isEditingThisCell = 
-                            editingCell?.studentId === enrollment.studentId && 
+
+                          const isEditingThisCell =
+                            editingCell?.studentId === enrollment.studentId &&
                             editingCell?.assessment === assessment;
-                          
+
                           return (
                             <Table.Cell key={assessment}>
                               {grade ? (
@@ -412,8 +429,10 @@ export function TeacherClassView({ classId }: TeacherClassViewProps) {
                                         size="1"
                                         type="number"
                                         value={editScore}
-                                        onChange={(e) => setEditScore(e.target.value)}
-                                        style={{ width: '60px' }}
+                                        onChange={(e) =>
+                                          setEditScore(e.target.value)
+                                        }
+                                        style={{ width: "60px" }}
                                         step="0.1"
                                       />
                                       <IconButton
@@ -454,9 +473,11 @@ export function TeacherClassView({ classId }: TeacherClassViewProps) {
                                     size="1"
                                     type="number"
                                     value={newScore}
-                                    onChange={(e) => setNewScore(e.target.value)}
+                                    onChange={(e) =>
+                                      setNewScore(e.target.value)
+                                    }
                                     placeholder="Score"
-                                    style={{ width: '60px' }}
+                                    style={{ width: "60px" }}
                                     step="0.1"
                                     autoFocus
                                   />
@@ -480,11 +501,16 @@ export function TeacherClassView({ classId }: TeacherClassViewProps) {
                                 </Flex>
                               ) : (
                                 <Box
-                                  onClick={() => handleCellClick(enrollment.studentId, assessment)}
+                                  onClick={() =>
+                                    handleCellClick(
+                                      enrollment.studentId,
+                                      assessment
+                                    )
+                                  }
                                   style={{
-                                    cursor: 'pointer',
-                                    padding: '4px',
-                                    borderRadius: '4px',
+                                    cursor: "pointer",
+                                    padding: "4px",
+                                    borderRadius: "4px",
                                   }}
                                   className="hover:bg-gray-3"
                                 >
@@ -509,4 +535,3 @@ export function TeacherClassView({ classId }: TeacherClassViewProps) {
     </Box>
   );
 }
-

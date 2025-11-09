@@ -1,6 +1,9 @@
+"use client";
+
 import { Card, Flex, Heading, Text, Badge, Box } from "@radix-ui/themes";
 import { EnrollmentResponse, EnrollmentStatus } from "@/src/types/api";
 import Link from "next/link";
+import { useT } from "@/src/lib/i18n/provider";
 
 interface EnrollmentCardProps {
   enrollment: EnrollmentResponse;
@@ -22,6 +25,8 @@ const getStatusColor = (
 };
 
 export function EnrollmentCard({ enrollment }: EnrollmentCardProps) {
+  const t = useT();
+  
   return (
     <Link
       href={`/class/${enrollment.classId}`}
@@ -55,7 +60,7 @@ export function EnrollmentCard({ enrollment }: EnrollmentCardProps) {
             <Flex gap="2" align="center">
               {enrollment.semester && enrollment.year && (
                 <Text size="1" color="gray">
-                  {enrollment.semester} {enrollment.year}
+                  {t(`class.${enrollment.semester.toLowerCase()}`)} {enrollment.year}
                 </Text>
               )}
               {enrollment.groupCode && (
@@ -66,7 +71,7 @@ export function EnrollmentCard({ enrollment }: EnrollmentCardProps) {
                     </Text>
                   )}
                   <Text size="1" color="gray">
-                    Group: <Text weight="bold">{enrollment.groupCode}</Text>
+                    {t('class.group')}: <Text weight="bold">{enrollment.groupCode}</Text>
                   </Text>
                 </>
               )}
@@ -80,7 +85,7 @@ export function EnrollmentCard({ enrollment }: EnrollmentCardProps) {
           )}
 
           <Text size="1" color="gray">
-            Enrolled: {new Date(enrollment.enrolledAt).toLocaleDateString()}
+            {t('roster.enrolledDate')}: {new Date(enrollment.enrolledAt).toLocaleDateString()}
           </Text>
         </Flex>
       </Card>

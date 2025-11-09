@@ -17,9 +17,12 @@ import { InfoCircledIcon } from "@radix-ui/react-icons";
 import { authApi } from "@/src/lib/api/auth";
 import { UserRole } from "@/src/types/api";
 import Link from "next/link";
+import { LanguageSelector } from "@/src/components/LanguageSelector";
+import { useT } from "@/src/lib/i18n/provider";
 
 export default function SignupPage() {
   const router = useRouter();
+  const t = useT();
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
@@ -37,12 +40,12 @@ export default function SignupPage() {
 
     // Validation
     if (formData.password !== formData.confirmPassword) {
-      setError("Passwords do not match");
+      setError(t("auth.passwordsDontMatch"));
       return;
     }
 
     if (formData.password.length < 6) {
-      setError("Password must be at least 6 characters");
+      setError(t("auth.passwordMinLength"));
       return;
     }
 
@@ -79,9 +82,13 @@ export default function SignupPage() {
       <Box style={{ width: "100%", maxWidth: "450px" }}>
         <Card size="4">
           <Flex direction="column" gap="4">
+            <Flex justify="end">
+              <LanguageSelector />
+            </Flex>
+
             <Box style={{ textAlign: "center" }}>
               <Heading size="8" mb="2">
-                Create Account
+                {t("auth.createAccount")}
               </Heading>
               <Text size="3" color="gray">
                 Join the AIClass platform
@@ -102,7 +109,7 @@ export default function SignupPage() {
                 {/* Full Name */}
                 <Box>
                   <Text as="label" size="2" weight="bold" mb="1">
-                    Full Name *
+                    {t("auth.fullName")} *
                   </Text>
                   <TextField.Root
                     placeholder="John Doe"
@@ -117,7 +124,7 @@ export default function SignupPage() {
                 {/* Email */}
                 <Box>
                   <Text as="label" size="2" weight="bold" mb="1">
-                    Email *
+                    {t("auth.email")} *
                   </Text>
                   <TextField.Root
                     type="email"
@@ -133,7 +140,7 @@ export default function SignupPage() {
                 {/* Role */}
                 <Box>
                   <Text as="label" size="2" weight="bold" mb="1">
-                    I am a *
+                    {t("auth.iAmA")} *
                   </Text>
                   <Select.Root
                     value={formData.role}
@@ -145,10 +152,10 @@ export default function SignupPage() {
                     <Select.Trigger style={{ width: "100%" }} />
                     <Select.Content>
                       <Select.Item value={UserRole.STUDENT}>
-                        Student
+                        {t("auth.student")}
                       </Select.Item>
                       <Select.Item value={UserRole.TEACHER}>
-                        Teacher
+                        {t("auth.teacher")}
                       </Select.Item>
                     </Select.Content>
                   </Select.Root>
@@ -157,11 +164,11 @@ export default function SignupPage() {
                 {/* Password */}
                 <Box>
                   <Text as="label" size="2" weight="bold" mb="1">
-                    Password *
+                    {t("auth.password")} *
                   </Text>
                   <TextField.Root
                     type="password"
-                    placeholder="At least 6 characters"
+                    placeholder={t("auth.passwordMinLength")}
                     value={formData.password}
                     onChange={(e) =>
                       setFormData({ ...formData, password: e.target.value })
@@ -174,11 +181,11 @@ export default function SignupPage() {
                 {/* Confirm Password */}
                 <Box>
                   <Text as="label" size="2" weight="bold" mb="1">
-                    Confirm Password *
+                    {t("auth.confirmPassword")} *
                   </Text>
                   <TextField.Root
                     type="password"
-                    placeholder="Re-enter your password"
+                    placeholder={t("auth.confirmPassword")}
                     value={formData.confirmPassword}
                     onChange={(e) =>
                       setFormData({
@@ -192,18 +199,18 @@ export default function SignupPage() {
                 </Box>
 
                 <Button type="submit" size="3" disabled={isLoading}>
-                  {isLoading ? "Creating Account..." : "Sign Up"}
+                  {isLoading ? t("auth.creatingAccount") : t("auth.signup")}
                 </Button>
               </Flex>
             </form>
 
             <Flex justify="center" gap="2">
               <Text size="2" color="gray">
-                Already have an account?
+                {t("auth.alreadyHaveAccount")}
               </Text>
               <Link href="/login" style={{ textDecoration: "none" }}>
                 <Text size="2" color="blue" style={{ cursor: "pointer" }}>
-                  Log In
+                  {t("auth.login")}
                 </Text>
               </Link>
             </Flex>

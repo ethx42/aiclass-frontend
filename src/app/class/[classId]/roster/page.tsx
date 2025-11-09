@@ -35,10 +35,12 @@ import {
   UserRole,
   roleToApiFormat,
 } from "@/src/types/api";
+import { useT } from "@/src/lib/i18n/provider";
 
 export default function RosterPage() {
   const params = useParams();
   const router = useRouter();
+  const t = useT();
   const classId = params.classId as string;
 
   const { data: classData } = useClass(classId);
@@ -114,15 +116,16 @@ export default function RosterPage() {
     return cleanup;
   }, [searchQuery, debounceSearch]);
 
-  const handleSelectStudent = (student: User) => {
+  const handleSelectStudent = (e: React.MouseEvent, student: User) => {
+    e.preventDefault();
+    e.stopPropagation();
     setSelectedStudent(student);
-    setSearchQuery(student.fullName || student.email || "");
-    setSearchResults([]);
+    setSearchResults([]); // Clear results, don't update searchQuery to avoid new search
   };
 
   const handleAddStudent = async () => {
     if (!selectedStudent) {
-      setError("Please select a student");
+      setError(t("roster.selectStudent"));
       return;
     }
 
@@ -179,7 +182,7 @@ export default function RosterPage() {
     <Box p="6">
       <Box mb="6">
         <Button variant="ghost" onClick={() => router.back()}>
-          <ArrowLeftIcon /> Back to Class
+          <ArrowLeftIcon /> {t("navigation.backToClass")}
         </Button>
       </Box>
 
@@ -188,7 +191,7 @@ export default function RosterPage() {
           <Flex justify="between" align="center">
             <Box>
               <Heading size="6" mb="1">
-                Class Roster
+                {t("roster.classRoster")}
               </Heading>
               <Text size="2" color="gray">
                 {classData?.data?.subjectCode} - {classData?.data?.subjectName}
@@ -200,15 +203,14 @@ export default function RosterPage() {
             >
               <Dialog.Trigger>
                 <Button>
-                  <PlusIcon /> Add Student
+                  <PlusIcon /> {t("roster.addStudent")}
                 </Button>
               </Dialog.Trigger>
 
               <Dialog.Content style={{ maxWidth: 500, overflow: "visible" }}>
-                <Dialog.Title>Add Student</Dialog.Title>
+                <Dialog.Title>{t("roster.addStudent")}</Dialog.Title>
                 <Dialog.Description size="2" mb="4">
-                  Search for a student by name or email to add them to this
-                  class.
+                  {t("roster.searchByNameOrEmail")}
                 </Dialog.Description>
 
                 <Flex direction="column" gap="3">
@@ -223,10 +225,10 @@ export default function RosterPage() {
 
                   <Box>
                     <Text as="label" size="2" weight="bold" mb="1">
-                      Search Student
+                      {t("roster.searchStudent")}
                     </Text>
                     <TextField.Root
-                      placeholder="Type name or email..."
+                      placeholder={t("roster.typeNameOrEmail")}
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       autoFocus
@@ -236,20 +238,20 @@ export default function RosterPage() {
                         <>
                           <Spinner size="1" />
                           <Text size="1" color="gray">
-                            Searching...
+                            {t("roster.searching")}
                           </Text>
                         </>
                       )}
                       {searchQuery.length > 0 && searchQuery.length < 2 && (
                         <Text size="1" color="gray">
-                          Type at least 2 characters
+                          {t("roster.typeAtLeast2")}
                         </Text>
                       )}
                       {searchQuery.length >= 2 &&
                         !isSearching &&
                         searchResults.length === 0 && (
                           <Text size="1" color="gray">
-                            No students found
+                            {t("roster.noStudentsFound")}
                           </Text>
                         )}
                     </Flex>
@@ -259,7 +261,7 @@ export default function RosterPage() {
                   {searchResults.length > 0 && (
                     <Box>
                       <Text size="2" weight="bold" mb="2">
-                        Select a student:
+                        {t("roster.selectStudent")} ({searchResults.length})
                       </Text>
                       <Box
                         style={{
@@ -272,7 +274,7 @@ export default function RosterPage() {
                         {searchResults.map((student) => (
                           <Box
                             key={student.id}
-                            onClick={() => handleSelectStudent(student)}
+                            onClick={(e) => handleSelectStudent(e, student)}
                             style={{
                               padding: "12px",
                               cursor: "pointer",
@@ -304,7 +306,7 @@ export default function RosterPage() {
                     <Card style={{ backgroundColor: "var(--accent-2)" }}>
                       <Flex direction="column" gap="1">
                         <Text size="2" weight="bold">
-                          Selected: {selectedStudent.fullName}
+                          {t("roster.selected")}: {selectedStudent.fullName}
                         </Text>
                         <Text size="1" color="gray">
                           {selectedStudent.email}
@@ -316,14 +318,16 @@ export default function RosterPage() {
                   <Flex gap="3" justify="end" mt="2">
                     <Dialog.Close>
                       <Button variant="soft" color="gray">
-                        Cancel
+                        {t("common.cancel")}
                       </Button>
                     </Dialog.Close>
                     <Button
                       onClick={handleAddStudent}
                       disabled={createEnrollment.isPending || !selectedStudent}
                     >
-                      {createEnrollment.isPending ? "Adding..." : "Add Student"}
+                      {createEnrollment.isPending
+                        ? t("roster.adding")
+                        : t("roster.addStudent")}
                     </Button>
                   </Flex>
                 </Flex>
@@ -339,20 +343,30 @@ export default function RosterPage() {
               gap="3"
               style={{ padding: "40px" }}
             >
-              <Text color="gray">No students enrolled yet</Text>
+              <Text color="gray">{t("roster.noStudentsEnrolled")}</Text>
               <Button variant="soft" onClick={() => setIsAddDialogOpen(true)}>
-                <PlusIcon /> Add First Student
+                <PlusIcon /> {t("roster.addFirstStudent")}
               </Button>
             </Flex>
           ) : (
             <Table.Root>
               <Table.Header>
                 <Table.Row>
-                  <Table.ColumnHeaderCell>Name</Table.ColumnHeaderCell>
-                  <Table.ColumnHeaderCell>Email</Table.ColumnHeaderCell>
-                  <Table.ColumnHeaderCell>Status</Table.ColumnHeaderCell>
-                  <Table.ColumnHeaderCell>Enrolled Date</Table.ColumnHeaderCell>
-                  <Table.ColumnHeaderCell>Actions</Table.ColumnHeaderCell>
+                  <Table.ColumnHeaderCell>
+                    {t("roster.name")}
+                  </Table.ColumnHeaderCell>
+                  <Table.ColumnHeaderCell>
+                    {t("roster.email")}
+                  </Table.ColumnHeaderCell>
+                  <Table.ColumnHeaderCell>
+                    {t("roster.status")}
+                  </Table.ColumnHeaderCell>
+                  <Table.ColumnHeaderCell>
+                    {t("roster.enrolledDate")}
+                  </Table.ColumnHeaderCell>
+                  <Table.ColumnHeaderCell>
+                    {t("roster.actions")}
+                  </Table.ColumnHeaderCell>
                 </Table.Row>
               </Table.Header>
 
@@ -362,17 +376,18 @@ export default function RosterPage() {
                     <Table.Cell>
                       <Text weight="bold">{enrollment.studentName}</Text>
                     </Table.Cell>
-                    <Table.Cell>{enrollment.studentEmail}</Table.Cell>
+                    <Table.Cell>
+                      <Text color="gray">{enrollment.studentEmail || "-"}</Text>
+                    </Table.Cell>
                     <Table.Cell>
                       <Badge
                         color={
-                          enrollment.enrollmentStatus ===
-                          EnrollmentStatus.ACTIVE
+                          enrollment.status === EnrollmentStatus.ACTIVE
                             ? "green"
                             : "gray"
                         }
                       >
-                        {enrollment.enrollmentStatus}
+                        {enrollment.status}
                       </Badge>
                     </Table.Cell>
                     <Table.Cell>
