@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/src/lib/hooks/use-auth';
 import { Box, Card, Flex, Heading, TextField, Button, Text, Callout } from '@radix-ui/themes';
@@ -9,7 +9,7 @@ import Link from 'next/link';
 import { LanguageSelector } from '@/src/components/LanguageSelector';
 import { useT } from '@/src/lib/i18n/provider';
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const t = useT();
@@ -151,3 +151,10 @@ export default function LoginPage() {
   );
 }
 
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <LoginForm />
+    </Suspense>
+  );
+}
