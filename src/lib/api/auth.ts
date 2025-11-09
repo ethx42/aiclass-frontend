@@ -2,8 +2,15 @@ import { apiClient } from './client';
 import { usersApi } from './users';
 import { ApiResponse, User, UserRole, roleToApiFormat } from '@/src/types/api';
 
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+
+// Validate at runtime (not build time)
+const validateSupabaseConfig = () => {
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+    throw new Error('Missing Supabase environment variables. Please configure NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY');
+  }
+};
 
 interface SignupData {
   email: string;
@@ -35,6 +42,7 @@ interface SupabaseAuthResponse {
 export const authApi = {
   // Signup with Supabase and create user in our DB
   signup: async (data: SignupData) => {
+    validateSupabaseConfig();
     try {
       // Step 1: Create user in Supabase Auth
       const supabaseResponse = await fetch(`${SUPABASE_URL}/auth/v1/signup`, {
@@ -81,6 +89,7 @@ export const authApi = {
 
   // Login with Supabase
   login: async (data: LoginData) => {
+    validateSupabaseConfig();
     try {
       const supabaseResponse = await fetch(
         `${SUPABASE_URL}/auth/v1/token?grant_type=password`,
@@ -120,6 +129,7 @@ export const authApi = {
 
   // Logout
   logout: async (token: string) => {
+    validateSupabaseConfig();
     try {
       await fetch(`${SUPABASE_URL}/auth/v1/logout`, {
         method: 'POST',
