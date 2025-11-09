@@ -32,9 +32,11 @@ import {
   useDeleteSubject,
 } from "@/src/lib/hooks/use-subjects";
 import { UserRole, Subject } from "@/src/types/api";
+import { useT } from "@/src/lib/i18n/provider";
 
 export default function SubjectsPage() {
   const router = useRouter();
+  const t = useT();
   const user = useAuthStore((state) => state.user);
   const { data: subjectsData, isLoading } = useSubjects();
   const createSubject = useCreateSubject();
@@ -147,7 +149,7 @@ export default function SubjectsPage() {
     <Box p="6">
       <Box mb="6">
         <Button variant="ghost" onClick={() => router.push("/dashboard")}>
-          <ArrowLeftIcon /> Back to Dashboard
+          <ArrowLeftIcon /> {t("navigation.backToDashboard")}
         </Button>
       </Box>
 
@@ -156,14 +158,14 @@ export default function SubjectsPage() {
           <Flex justify="between" align="center">
             <Box>
               <Heading size="6" mb="1">
-                Manage Subjects
+                {t("subjects.manageSubjects")}
               </Heading>
               <Text size="2" color="gray">
-                Create and manage course subjects
+                {t("subjects.createAndManage")}
               </Text>
             </Box>
             <Button onClick={handleCreateClick}>
-              <PlusIcon /> Create Subject
+              <PlusIcon /> {t("subjects.createSubject")}
             </Button>
           </Flex>
 
@@ -175,19 +177,27 @@ export default function SubjectsPage() {
               gap="3"
               style={{ padding: "40px" }}
             >
-              <Text color="gray">No subjects yet</Text>
+              <Text color="gray">{t("subjects.noSubjects")}</Text>
               <Button variant="soft" onClick={handleCreateClick}>
-                <PlusIcon /> Create First Subject
+                <PlusIcon /> {t("subjects.createFirstSubject")}
               </Button>
             </Flex>
           ) : (
             <Table.Root>
               <Table.Header>
                 <Table.Row>
-                  <Table.ColumnHeaderCell>Code</Table.ColumnHeaderCell>
-                  <Table.ColumnHeaderCell>Name</Table.ColumnHeaderCell>
-                  <Table.ColumnHeaderCell>Description</Table.ColumnHeaderCell>
-                  <Table.ColumnHeaderCell>Actions</Table.ColumnHeaderCell>
+                  <Table.ColumnHeaderCell>
+                    {t("subjects.code")}
+                  </Table.ColumnHeaderCell>
+                  <Table.ColumnHeaderCell>
+                    {t("roster.name")}
+                  </Table.ColumnHeaderCell>
+                  <Table.ColumnHeaderCell>
+                    {t("subjects.description")}
+                  </Table.ColumnHeaderCell>
+                  <Table.ColumnHeaderCell>
+                    {t("roster.actions")}
+                  </Table.ColumnHeaderCell>
                 </Table.Row>
               </Table.Header>
 
@@ -236,9 +246,9 @@ export default function SubjectsPage() {
         onOpenChange={setIsCreateDialogOpen}
       >
         <Dialog.Content style={{ maxWidth: 500 }}>
-          <Dialog.Title>Create Subject</Dialog.Title>
+          <Dialog.Title>{t("subjects.createSubject")}</Dialog.Title>
           <Dialog.Description size="2" mb="4">
-            Add a new course subject
+            {t("subjects.addNewSubject")}
           </Dialog.Description>
 
           <Flex direction="column" gap="3">
@@ -253,10 +263,10 @@ export default function SubjectsPage() {
 
             <Box>
               <Text as="label" size="2" weight="bold" mb="1">
-                Subject Code *
+                {t("subjects.subjectCode")} *
               </Text>
               <TextField.Root
-                placeholder="e.g., CS101"
+                placeholder={t("subjects.subjectCodePlaceholder")}
                 value={createFormData.code}
                 onChange={(e) =>
                   setCreateFormData({ ...createFormData, code: e.target.value })
@@ -267,10 +277,10 @@ export default function SubjectsPage() {
 
             <Box>
               <Text as="label" size="2" weight="bold" mb="1">
-                Subject Name *
+                {t("subjects.subjectName")} *
               </Text>
               <TextField.Root
-                placeholder="e.g., Introduction to Computer Science"
+                placeholder={t("subjects.subjectNamePlaceholder")}
                 value={createFormData.name}
                 onChange={(e) =>
                   setCreateFormData({ ...createFormData, name: e.target.value })
@@ -281,10 +291,10 @@ export default function SubjectsPage() {
 
             <Box>
               <Text as="label" size="2" weight="bold" mb="1">
-                Description (Optional)
+                {t("subjects.description")} ({t("class.optional")})
               </Text>
               <TextField.Root
-                placeholder="Brief description of the subject"
+                placeholder={t("subjects.descriptionPlaceholder")}
                 value={createFormData.description}
                 onChange={(e) =>
                   setCreateFormData({
@@ -298,7 +308,7 @@ export default function SubjectsPage() {
             <Flex gap="3" justify="end" mt="2">
               <Dialog.Close>
                 <Button variant="soft" color="gray">
-                  Cancel
+                  {t("common.cancel")}
                 </Button>
               </Dialog.Close>
               <Button
@@ -309,7 +319,9 @@ export default function SubjectsPage() {
                   !createFormData.name
                 }
               >
-                {createSubject.isPending ? "Creating..." : "Create Subject"}
+                {createSubject.isPending
+                  ? t("subjects.creating")
+                  : t("subjects.createSubject")}
               </Button>
             </Flex>
           </Flex>
@@ -319,9 +331,11 @@ export default function SubjectsPage() {
       {/* Edit Subject Dialog */}
       <Dialog.Root open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <Dialog.Content style={{ maxWidth: 500 }}>
-          <Dialog.Title>Edit Subject</Dialog.Title>
+          <Dialog.Title>
+            {t("common.edit")} {t("class.subject")}
+          </Dialog.Title>
           <Dialog.Description size="2" mb="4">
-            Update subject details
+            {t("subjects.updateSubjectDetails")}
           </Dialog.Description>
 
           <Flex direction="column" gap="3">
@@ -336,20 +350,20 @@ export default function SubjectsPage() {
 
             <Box>
               <Text as="label" size="2" weight="bold" mb="1">
-                Subject Code
+                {t("subjects.subjectCode")}
               </Text>
               <TextField.Root value={editFormData.code} disabled />
               <Text size="1" color="gray" mt="1">
-                Code cannot be changed
+                {t("subjects.codeCannotChange")}
               </Text>
             </Box>
 
             <Box>
               <Text as="label" size="2" weight="bold" mb="1">
-                Subject Name *
+                {t("subjects.subjectName")} *
               </Text>
               <TextField.Root
-                placeholder="e.g., Introduction to Computer Science"
+                placeholder={t("subjects.subjectNamePlaceholder")}
                 value={editFormData.name}
                 onChange={(e) =>
                   setEditFormData({ ...editFormData, name: e.target.value })
@@ -360,10 +374,10 @@ export default function SubjectsPage() {
 
             <Box>
               <Text as="label" size="2" weight="bold" mb="1">
-                Description (Optional)
+                {t("subjects.description")} ({t("class.optional")})
               </Text>
               <TextField.Root
-                placeholder="Brief description of the subject"
+                placeholder={t("subjects.descriptionPlaceholder")}
                 value={editFormData.description}
                 onChange={(e) =>
                   setEditFormData({
@@ -377,14 +391,16 @@ export default function SubjectsPage() {
             <Flex gap="3" justify="end" mt="2">
               <Dialog.Close>
                 <Button variant="soft" color="gray">
-                  Cancel
+                  {t("common.cancel")}
                 </Button>
               </Dialog.Close>
               <Button
                 onClick={handleEditSubmit}
                 disabled={updateSubject.isPending || !editFormData.name}
               >
-                {updateSubject.isPending ? "Saving..." : "Save Changes"}
+                {updateSubject.isPending
+                  ? t("subjects.saving")
+                  : t("common.save")}
               </Button>
             </Flex>
           </Flex>
@@ -397,16 +413,15 @@ export default function SubjectsPage() {
         onOpenChange={setIsDeleteDialogOpen}
       >
         <AlertDialog.Content style={{ maxWidth: 450 }}>
-          <AlertDialog.Title>Delete Subject</AlertDialog.Title>
+          <AlertDialog.Title>{t("subjects.deleteSubject")}</AlertDialog.Title>
           <AlertDialog.Description size="2">
-            Are you sure you want to delete this subject? This action cannot be
-            undone. All classes using this subject may be affected.
+            {t("subjects.deleteSubjectConfirm")}
           </AlertDialog.Description>
 
           <Flex gap="3" mt="4" justify="end">
             <AlertDialog.Cancel>
               <Button variant="soft" color="gray">
-                Cancel
+                {t("common.cancel")}
               </Button>
             </AlertDialog.Cancel>
             <AlertDialog.Action>
@@ -415,7 +430,9 @@ export default function SubjectsPage() {
                 onClick={handleDelete}
                 disabled={deleteSubject.isPending}
               >
-                {deleteSubject.isPending ? "Deleting..." : "Delete Subject"}
+                {deleteSubject.isPending
+                  ? t("class.deleting")
+                  : t("subjects.deleteSubject")}
               </Button>
             </AlertDialog.Action>
           </Flex>

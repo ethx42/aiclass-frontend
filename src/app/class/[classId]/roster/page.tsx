@@ -56,7 +56,7 @@ export default function RosterPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<User[]>([]);
   const [isSearching, setIsSearching] = useState(false);
-  const [selectedStudent, setSelectedStudent] = useState<User | null>(null);
+  const [selectedStudents, setSelectedStudents] = useState<User[]>([]);
   const [error, setError] = useState("");
 
   const enrollments = enrollmentsData?.data?.content || [];
@@ -119,33 +119,49 @@ export default function RosterPage() {
   const handleSelectStudent = (e: React.MouseEvent, student: User) => {
     e.preventDefault();
     e.stopPropagation();
-    setSelectedStudent(student);
-    setSearchResults([]); // Clear results, don't update searchQuery to avoid new search
+
+    // Toggle selection: if already selected, remove it; otherwise add it
+    const isAlreadySelected = selectedStudents.some((s) => s.id === student.id);
+
+    if (isAlreadySelected) {
+      setSelectedStudents(selectedStudents.filter((s) => s.id !== student.id));
+    } else {
+      setSelectedStudents([...selectedStudents, student]);
+    }
   };
 
-  const handleAddStudent = async () => {
-    if (!selectedStudent) {
-      setError(t("roster.selectStudent"));
+  const handleRemoveSelectedStudent = (studentId: string) => {
+    setSelectedStudents(selectedStudents.filter((s) => s.id !== studentId));
+  };
+
+  const handleAddStudents = async () => {
+    if (selectedStudents.length === 0) {
+      setError(t("roster.selectStudentError"));
       return;
     }
 
     setError("");
 
     try {
-      await createEnrollment.mutateAsync({
-        classId,
-        studentId: selectedStudent.id,
-        enrollmentStatus: EnrollmentStatus.ACTIVE,
-      });
+      // Add all selected students
+      await Promise.all(
+        selectedStudents.map((student) =>
+          createEnrollment.mutateAsync({
+            classId,
+            studentId: student.id,
+            enrollmentStatus: EnrollmentStatus.ACTIVE,
+          })
+        )
+      );
 
       setSearchQuery("");
-      setSelectedStudent(null);
+      setSelectedStudents([]);
       setSearchResults([]);
       setIsAddDialogOpen(false);
     } catch (err: unknown) {
       const errorMessage =
         (err as { response?: { data?: { message?: string } } })?.response?.data
-          ?.message || "Failed to add student";
+          ?.message || "Failed to add students";
       setError(errorMessage);
     }
   };
@@ -154,14 +170,14 @@ export default function RosterPage() {
     setIsAddDialogOpen(open);
     if (!open) {
       setSearchQuery("");
-      setSelectedStudent(null);
+      setSelectedStudents([]);
       setSearchResults([]);
       setError("");
     }
   };
 
   const handleRemoveStudent = async (enrollmentId: string) => {
-    if (confirm("Are you sure you want to remove this student?")) {
+    if (confirm(t("roster.removeStudent"))) {
       try {
         await deleteEnrollment.mutateAsync(enrollmentId);
       } catch (err) {
@@ -271,48 +287,91 @@ export default function RosterPage() {
                           overflow: "auto",
                         }}
                       >
-                        {searchResults.map((student) => (
-                          <Box
-                            key={student.id}
-                            onClick={(e) => handleSelectStudent(e, student)}
-                            style={{
-                              padding: "12px",
-                              cursor: "pointer",
-                              borderBottom: "1px solid var(--gray-4)",
-                              backgroundColor:
-                                selectedStudent?.id === student.id
+                        {searchResults.map((student) => {
+                          const isSelected = selectedStudents.some(
+                            (s) => s.id === student.id
+                          );
+                          return (
+                            <Box
+                              key={student.id}
+                              onClick={(e) => handleSelectStudent(e, student)}
+                              style={{
+                                padding: "12px",
+                                cursor: "pointer",
+                                borderBottom: "1px solid var(--gray-4)",
+                                backgroundColor: isSelected
                                   ? "var(--accent-3)"
                                   : "transparent",
-                            }}
-                            className="hover:bg-gray-2"
-                          >
-                            <Text size="2" weight="bold">
-                              {student.fullName}
-                            </Text>
-                            <Text
-                              size="1"
-                              color="gray"
-                              style={{ display: "block" }}
+                              }}
+                              className="hover:bg-gray-2"
                             >
-                              {student.email}
-                            </Text>
-                          </Box>
-                        ))}
+                              <Flex justify="between" align="center">
+                                <Box>
+                                  <Text size="2" weight="bold">
+                                    {student.fullName}
+                                  </Text>
+                                  <Text
+                                    size="1"
+                                    color="gray"
+                                    style={{ display: "block" }}
+                                  >
+                                    {student.email}
+                                  </Text>
+                                </Box>
+                                {isSelected && <Badge color="blue">✓</Badge>}
+                              </Flex>
+                            </Box>
+                          );
+                        })}
                       </Box>
                     </Box>
                   )}
 
-                  {selectedStudent && (
-                    <Card style={{ backgroundColor: "var(--accent-2)" }}>
-                      <Flex direction="column" gap="1">
+                  {selectedStudents.length > 0 && (
+                    <Box>
+                      <Flex justify="between" align="center" mb="2">
                         <Text size="2" weight="bold">
-                          {t("roster.selected")}: {selectedStudent.fullName}
+                          {t("roster.selected")} ({selectedStudents.length})
                         </Text>
-                        <Text size="1" color="gray">
-                          {selectedStudent.email}
-                        </Text>
+                        <Button
+                          size="1"
+                          variant="soft"
+                          color="gray"
+                          onClick={() => setSelectedStudents([])}
+                        >
+                          {t("roster.clearSelection")}
+                        </Button>
                       </Flex>
-                    </Card>
+                      <Flex direction="column" gap="2">
+                        {selectedStudents.map((student) => (
+                          <Card
+                            key={student.id}
+                            style={{ backgroundColor: "var(--accent-2)" }}
+                          >
+                            <Flex justify="between" align="center">
+                              <Flex direction="column" gap="1">
+                                <Text size="2" weight="bold">
+                                  {student.fullName}
+                                </Text>
+                                <Text size="1" color="gray">
+                                  {student.email}
+                                </Text>
+                              </Flex>
+                              <Button
+                                size="1"
+                                variant="ghost"
+                                color="red"
+                                onClick={() =>
+                                  handleRemoveSelectedStudent(student.id)
+                                }
+                              >
+                                ✕
+                              </Button>
+                            </Flex>
+                          </Card>
+                        ))}
+                      </Flex>
+                    </Box>
                   )}
 
                   <Flex gap="3" justify="end" mt="2">
@@ -322,12 +381,17 @@ export default function RosterPage() {
                       </Button>
                     </Dialog.Close>
                     <Button
-                      onClick={handleAddStudent}
-                      disabled={createEnrollment.isPending || !selectedStudent}
+                      onClick={handleAddStudents}
+                      disabled={
+                        createEnrollment.isPending ||
+                        selectedStudents.length === 0
+                      }
                     >
                       {createEnrollment.isPending
                         ? t("roster.adding")
-                        : t("roster.addStudent")}
+                        : `${t("roster.addStudent")} (${
+                            selectedStudents.length
+                          })`}
                     </Button>
                   </Flex>
                 </Flex>

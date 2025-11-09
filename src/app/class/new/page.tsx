@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   Box,
   Card,
@@ -12,35 +12,37 @@ import {
   Select,
   Button,
   Callout,
-} from '@radix-ui/themes';
-import { ArrowLeftIcon, InfoCircledIcon } from '@radix-ui/react-icons';
-import { useAuthStore } from '@/src/lib/stores/auth-store';
-import { useSubjects } from '@/src/lib/hooks/use-subjects';
-import { useCreateClass } from '@/src/lib/hooks/use-classes';
-import { Semester } from '@/src/types/api';
+} from "@radix-ui/themes";
+import { ArrowLeftIcon, InfoCircledIcon } from "@radix-ui/react-icons";
+import { useAuthStore } from "@/src/lib/stores/auth-store";
+import { useSubjects } from "@/src/lib/hooks/use-subjects";
+import { useCreateClass } from "@/src/lib/hooks/use-classes";
+import { Semester } from "@/src/types/api";
+import { useT } from "@/src/lib/i18n/provider";
 
 export default function CreateClassPage() {
   const router = useRouter();
+  const t = useT();
   const user = useAuthStore((state) => state.user);
   const { data: subjectsData, isLoading: loadingSubjects } = useSubjects();
   const createClass = useCreateClass();
 
   const [formData, setFormData] = useState({
-    subjectId: '',
+    subjectId: "",
     year: new Date().getFullYear(),
     semester: Semester.SPRING,
-    groupCode: '',
-    schedule: '',
+    groupCode: "",
+    schedule: "",
   });
 
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
 
     if (!user?.id) {
-      setError('User not authenticated');
+      setError("User not authenticated");
       return;
     }
 
@@ -49,11 +51,11 @@ export default function CreateClassPage() {
         ...formData,
         teacherId: user.id,
       });
-      router.push('/dashboard');
+      router.push("/dashboard");
     } catch (err: unknown) {
       const errorMessage =
         (err as { response?: { data?: { message?: string } } })?.response?.data
-          ?.message || 'Failed to create class';
+          ?.message || "Failed to create class";
       setError(errorMessage);
     }
   };
@@ -64,14 +66,14 @@ export default function CreateClassPage() {
     <Box p="6">
       <Box mb="6">
         <Button variant="ghost" onClick={() => router.back()}>
-          <ArrowLeftIcon /> Back
+          <ArrowLeftIcon /> {t("common.back")}
         </Button>
       </Box>
 
-      <Box style={{ maxWidth: '600px', margin: '0 auto' }}>
+      <Box style={{ maxWidth: "600px", margin: "0 auto" }}>
         <Card size="4">
           <Flex direction="column" gap="4">
-            <Heading size="6">Create New Class</Heading>
+            <Heading size="6">{t("class.createNewClass")}</Heading>
 
             {error && (
               <Callout.Root color="red">
@@ -87,7 +89,7 @@ export default function CreateClassPage() {
                 {/* Subject Selection */}
                 <Box>
                   <Text as="label" size="2" weight="bold" mb="1">
-                    Subject *
+                    {t("class.subject")} *
                   </Text>
                   <Select.Root
                     value={formData.subjectId}
@@ -97,12 +99,14 @@ export default function CreateClassPage() {
                     required
                   >
                     <Select.Trigger
-                      placeholder="Select a subject"
-                      style={{ width: '100%' }}
+                      placeholder={t("class.selectSubject")}
+                      style={{ width: "100%" }}
                     />
                     <Select.Content>
                       {loadingSubjects ? (
-                        <Select.Item value="loading">Loading...</Select.Item>
+                        <Select.Item value="loading">
+                          {t("common.loading")}
+                        </Select.Item>
                       ) : (
                         subjects.map((subject) => (
                           <Select.Item key={subject.id} value={subject.id}>
@@ -117,13 +121,16 @@ export default function CreateClassPage() {
                 {/* Year */}
                 <Box>
                   <Text as="label" size="2" weight="bold" mb="1">
-                    Year *
+                    {t("class.year")} *
                   </Text>
                   <TextField.Root
                     type="number"
                     value={formData.year.toString()}
                     onChange={(e) =>
-                      setFormData({ ...formData, year: parseInt(e.target.value) })
+                      setFormData({
+                        ...formData,
+                        year: parseInt(e.target.value),
+                      })
                     }
                     required
                     min="2020"
@@ -134,7 +141,7 @@ export default function CreateClassPage() {
                 {/* Semester */}
                 <Box>
                   <Text as="label" size="2" weight="bold" mb="1">
-                    Semester *
+                    {t("class.semester")} *
                   </Text>
                   <Select.Root
                     value={formData.semester}
@@ -143,12 +150,20 @@ export default function CreateClassPage() {
                     }
                     required
                   >
-                    <Select.Trigger style={{ width: '100%' }} />
+                    <Select.Trigger style={{ width: "100%" }} />
                     <Select.Content>
-                      <Select.Item value={Semester.SPRING}>Spring</Select.Item>
-                      <Select.Item value={Semester.SUMMER}>Summer</Select.Item>
-                      <Select.Item value={Semester.FALL}>Fall</Select.Item>
-                      <Select.Item value={Semester.WINTER}>Winter</Select.Item>
+                      <Select.Item value={Semester.SPRING}>
+                        {t("class.spring")}
+                      </Select.Item>
+                      <Select.Item value={Semester.SUMMER}>
+                        {t("class.summer")}
+                      </Select.Item>
+                      <Select.Item value={Semester.FALL}>
+                        {t("class.fall")}
+                      </Select.Item>
+                      <Select.Item value={Semester.WINTER}>
+                        {t("class.winter")}
+                      </Select.Item>
                     </Select.Content>
                   </Select.Root>
                 </Box>
@@ -156,10 +171,10 @@ export default function CreateClassPage() {
                 {/* Group Code */}
                 <Box>
                   <Text as="label" size="2" weight="bold" mb="1">
-                    Group Code *
+                    {t("class.groupCode")} *
                   </Text>
                   <TextField.Root
-                    placeholder="e.g., A, B, 101"
+                    placeholder={t("class.groupCodePlaceholder")}
                     value={formData.groupCode}
                     onChange={(e) =>
                       setFormData({ ...formData, groupCode: e.target.value })
@@ -171,10 +186,10 @@ export default function CreateClassPage() {
                 {/* Schedule */}
                 <Box>
                   <Text as="label" size="2" weight="bold" mb="1">
-                    Schedule (Optional)
+                    {t("class.schedule")} ({t("class.optional")})
                   </Text>
                   <TextField.Root
-                    placeholder="e.g., Mon/Wed/Fri 10:00-11:30"
+                    placeholder={t("class.schedulePlaceholder")}
                     value={formData.schedule}
                     onChange={(e) =>
                       setFormData({ ...formData, schedule: e.target.value })
@@ -190,14 +205,16 @@ export default function CreateClassPage() {
                     style={{ flex: 1 }}
                     onClick={() => router.back()}
                   >
-                    Cancel
+                    {t("common.cancel")}
                   </Button>
                   <Button
                     type="submit"
                     style={{ flex: 1 }}
                     disabled={createClass.isPending}
                   >
-                    {createClass.isPending ? 'Creating...' : 'Create Class'}
+                    {createClass.isPending
+                      ? t("class.creating")
+                      : t("dashboard.createClass")}
                   </Button>
                 </Flex>
               </Flex>
@@ -208,4 +225,3 @@ export default function CreateClassPage() {
     </Box>
   );
 }
-

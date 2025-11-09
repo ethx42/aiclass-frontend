@@ -20,7 +20,6 @@ export function LanguageSelector() {
         <Button variant="soft" color="gray" size="2">
           <GlobeIcon />
           <Flex align="center" gap="1">
-            <Text>{currentLanguage.flag}</Text>
             <Text>{currentLanguage.code.toUpperCase()}</Text>
           </Flex>
         </Button>

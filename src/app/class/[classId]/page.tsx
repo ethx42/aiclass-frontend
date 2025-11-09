@@ -379,7 +379,7 @@ export default function ClassDetailPage() {
                 {t("class.groupCode")} *
               </Text>
               <TextField.Root
-                placeholder="e.g., A, B, 101"
+                placeholder={t("class.groupCodePlaceholder")}
                 value={formData.groupCode}
                 onChange={(e) =>
                   setFormData({ ...formData, groupCode: e.target.value })
@@ -394,7 +394,7 @@ export default function ClassDetailPage() {
                 {t("class.schedule")} ({t("class.optional")})
               </Text>
               <TextField.Root
-                placeholder="e.g., Mon/Wed/Fri 10:00-11:30"
+                placeholder={t("class.schedulePlaceholder")}
                 value={formData.schedule}
                 onChange={(e) =>
                   setFormData({ ...formData, schedule: e.target.value })

@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import {
   Box,
@@ -9,11 +9,12 @@ import {
   Badge,
   Spinner,
   Callout,
-} from '@radix-ui/themes';
-import { InfoCircledIcon } from '@radix-ui/react-icons';
-import { useAuthStore } from '@/src/lib/stores/auth-store';
-import { useGrades } from '@/src/lib/hooks/use-grades';
-import { AssessmentKind } from '@/src/types/api';
+} from "@radix-ui/themes";
+import { InfoCircledIcon } from "@radix-ui/react-icons";
+import { useAuthStore } from "@/src/lib/stores/auth-store";
+import { useGrades } from "@/src/lib/hooks/use-grades";
+import { AssessmentKind } from "@/src/types/api";
+import { useT } from "@/src/lib/i18n/provider";
 
 interface StudentClassViewProps {
   classId: string;
@@ -22,30 +23,35 @@ interface StudentClassViewProps {
 const getAssessmentColor = (kind: AssessmentKind) => {
   switch (kind) {
     case AssessmentKind.EXAM:
-      return 'red';
+      return "red";
     case AssessmentKind.QUIZ:
-      return 'blue';
+      return "blue";
     case AssessmentKind.HOMEWORK:
-      return 'green';
+      return "green";
     case AssessmentKind.PROJECT:
-      return 'purple';
+      return "purple";
     default:
-      return 'gray';
+      return "gray";
   }
 };
 
 const getGradeColor = (percentage: number) => {
-  if (percentage >= 90) return 'green';
-  if (percentage >= 80) return 'blue';
-  if (percentage >= 70) return 'orange';
-  return 'red';
+  if (percentage >= 90) return "green";
+  if (percentage >= 80) return "blue";
+  if (percentage >= 70) return "orange";
+  return "red";
 };
 
 export function StudentClassView({ classId }: StudentClassViewProps) {
+  const t = useT();
   const user = useAuthStore((state) => state.user);
-  
+
   // Backend only allows filtering by studentId for students, not both
-  const { data: gradesData, isLoading, error } = useGrades({
+  const {
+    data: gradesData,
+    isLoading,
+    error,
+  } = useGrades({
     studentId: user?.id,
     page: 0,
     size: 1000, // Get all grades to filter by classId in frontend
@@ -53,7 +59,7 @@ export function StudentClassView({ classId }: StudentClassViewProps) {
 
   if (isLoading) {
     return (
-      <Flex align="center" justify="center" style={{ minHeight: '50vh' }}>
+      <Flex align="center" justify="center" style={{ minHeight: "50vh" }}>
         <Spinner size="3" />
       </Flex>
     );
@@ -66,7 +72,7 @@ export function StudentClassView({ classId }: StudentClassViewProps) {
           <Callout.Icon>
             <InfoCircledIcon />
           </Callout.Icon>
-          <Callout.Text>Failed to load grades. Please try again.</Callout.Text>
+          <Callout.Text>{t("class.failedToLoad")}</Callout.Text>
         </Callout.Root>
       </Box>
     );
@@ -80,7 +86,8 @@ export function StudentClassView({ classId }: StudentClassViewProps) {
   const overallAverage =
     grades.length > 0
       ? (
-          grades.reduce((sum, g) => sum + (g.score / g.maxScore) * 100, 0) / grades.length
+          grades.reduce((sum, g) => sum + (g.score / g.maxScore) * 100, 0) /
+          grades.length
         ).toFixed(1)
       : null;
 
@@ -100,12 +107,12 @@ export function StudentClassView({ classId }: StudentClassViewProps) {
         <Card>
           <Flex direction="column" gap="3">
             <Text size="5" weight="bold">
-              Performance Summary
+              {t("grades.performanceSummary")}
             </Text>
             <Flex gap="6" wrap="wrap">
               <Box>
                 <Text size="2" color="gray" mb="1">
-                  Total Grades
+                  {t("grades.totalGrades")}&nbsp;
                 </Text>
                 <Text size="6" weight="bold">
                   {grades.length}
@@ -114,12 +121,12 @@ export function StudentClassView({ classId }: StudentClassViewProps) {
               {overallAverage && (
                 <Box>
                   <Text size="2" color="gray" mb="1">
-                    Overall Average
+                    {t("grades.overallAverage")}&nbsp;
                   </Text>
                   <Badge
                     size="3"
                     color={getGradeColor(parseFloat(overallAverage))}
-                    style={{ fontSize: '20px', padding: '8px 16px' }}
+                    style={{ fontSize: "20px", padding: "8px 16px" }}
                   >
                     {overallAverage}%
                   </Badge>
@@ -133,7 +140,7 @@ export function StudentClassView({ classId }: StudentClassViewProps) {
         <Card>
           <Flex direction="column" gap="4">
             <Text size="5" weight="bold">
-              My Grades
+              {t("grades.myGrades")}
             </Text>
 
             {grades.length === 0 ? (
@@ -142,23 +149,33 @@ export function StudentClassView({ classId }: StudentClassViewProps) {
                 align="center"
                 justify="center"
                 gap="3"
-                style={{ padding: '40px' }}
+                style={{ padding: "40px" }}
               >
-                <Text color="gray">No grades recorded yet</Text>
+                <Text color="gray">{t("grades.noGradesRecorded")}</Text>
                 <Text size="2" color="gray">
-                  Grades will appear here once your teacher adds them
+                  {t("grades.gradesWillAppear")}
                 </Text>
               </Flex>
             ) : (
-              <Box style={{ overflowX: 'auto' }}>
+              <Box style={{ overflowX: "auto" }}>
                 <Table.Root>
                   <Table.Header>
                     <Table.Row>
-                      <Table.ColumnHeaderCell>Assessment</Table.ColumnHeaderCell>
-                      <Table.ColumnHeaderCell>Type</Table.ColumnHeaderCell>
-                      <Table.ColumnHeaderCell>Score</Table.ColumnHeaderCell>
-                      <Table.ColumnHeaderCell>Percentage</Table.ColumnHeaderCell>
-                      <Table.ColumnHeaderCell>Date</Table.ColumnHeaderCell>
+                      <Table.ColumnHeaderCell>
+                        {t("grades.assessment")}
+                      </Table.ColumnHeaderCell>
+                      <Table.ColumnHeaderCell>
+                        {t("grades.type")}
+                      </Table.ColumnHeaderCell>
+                      <Table.ColumnHeaderCell>
+                        {t("grades.score")}
+                      </Table.ColumnHeaderCell>
+                      <Table.ColumnHeaderCell>
+                        {t("grades.percentage")}
+                      </Table.ColumnHeaderCell>
+                      <Table.ColumnHeaderCell>
+                        {t("grades.date")}
+                      </Table.ColumnHeaderCell>
                     </Table.Row>
                   </Table.Header>
 
@@ -166,18 +183,26 @@ export function StudentClassView({ classId }: StudentClassViewProps) {
                     {grades
                       .sort(
                         (a, b) =>
-                          new Date(b.gradedAt).getTime() - new Date(a.gradedAt).getTime()
+                          new Date(b.gradedAt).getTime() -
+                          new Date(a.gradedAt).getTime()
                       )
                       .map((grade) => {
-                        const percentage = ((grade.score / grade.maxScore) * 100).toFixed(1);
+                        const percentage = (
+                          (grade.score / grade.maxScore) *
+                          100
+                        ).toFixed(1);
                         return (
                           <Table.Row key={grade.id}>
                             <Table.Cell>
                               <Text weight="bold">{grade.assessmentName}</Text>
                             </Table.Cell>
                             <Table.Cell>
-                              <Badge color={getAssessmentColor(grade.assessmentKind)}>
-                                {grade.assessmentKind}
+                              <Badge
+                                color={getAssessmentColor(grade.assessmentKind)}
+                              >
+                                {t(
+                                  `grades.${grade.assessmentKind.toLowerCase()}`
+                                )}
                               </Badge>
                             </Table.Cell>
                             <Table.Cell>
@@ -186,7 +211,9 @@ export function StudentClassView({ classId }: StudentClassViewProps) {
                               </Text>
                             </Table.Cell>
                             <Table.Cell>
-                              <Badge color={getGradeColor(parseFloat(percentage))}>
+                              <Badge
+                                color={getGradeColor(parseFloat(percentage))}
+                              >
                                 {percentage}%
                               </Badge>
                             </Table.Cell>
@@ -210,24 +237,31 @@ export function StudentClassView({ classId }: StudentClassViewProps) {
           <Card>
             <Flex direction="column" gap="4">
               <Text size="5" weight="bold">
-                Breakdown by Type
+                {t("grades.breakdownByType")}
               </Text>
 
               <Flex gap="4" wrap="wrap">
                 {Object.entries(gradesByType).map(([type, typeGrades]) => {
                   const avg = (
-                    typeGrades.reduce((sum, g) => sum + (g.score / g.maxScore) * 100, 0) /
-                    typeGrades.length
+                    typeGrades.reduce(
+                      (sum, g) => sum + (g.score / g.maxScore) * 100,
+                      0
+                    ) / typeGrades.length
                   ).toFixed(1);
 
                   return (
-                    <Card key={type} style={{ minWidth: '150px' }}>
+                    <Card key={type} style={{ minWidth: "150px" }}>
                       <Flex direction="column" gap="2">
-                        <Badge color={getAssessmentColor(type as AssessmentKind)}>
-                          {type}
+                        <Badge
+                          color={getAssessmentColor(type as AssessmentKind)}
+                        >
+                          {t(`grades.${type.toLowerCase()}`)}
                         </Badge>
                         <Text size="2" color="gray">
-                          {typeGrades.length} grade{typeGrades.length !== 1 ? 's' : ''}
+                          {typeGrades.length}{" "}
+                          {typeGrades.length !== 1
+                            ? t("grades.grades")
+                            : t("grades.grade")}
                         </Text>
                         <Text size="5" weight="bold">
                           {avg}%
@@ -244,4 +278,3 @@ export function StudentClassView({ classId }: StudentClassViewProps) {
     </Box>
   );
 }
-

@@ -29,7 +29,6 @@ export default function DashboardPage() {
         <Flex justify="between" align="center" px="6" py="4">
           <Heading size="6">AIClass</Heading>
           <Flex gap="3" align="center">
-            <LanguageSelector />
             <Box style={{ textAlign: "right" }}>
               <Heading size="3">{user?.fullName}</Heading>
               <Box style={{ fontSize: "12px", color: "var(--gray-11)" }}>
@@ -44,6 +43,7 @@ export default function DashboardPage() {
             <Button variant="soft" color="red" onClick={logout}>
               <ExitIcon /> {t("auth.logout")}
             </Button>
+            <LanguageSelector />
           </Flex>
         </Flex>
       </Box>

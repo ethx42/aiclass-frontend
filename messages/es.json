@@ -66,7 +66,9 @@
     "year": "Año",
     "semester": "Semestre",
     "groupCode": "Código de Grupo",
+    "groupCodePlaceholder": "ej: A, B, 101",
     "schedule": "Horario",
+    "schedulePlaceholder": "ej: Lun/Mié/Vie 10:00-11:30",
     "optional": "Opcional",
     "spring": "Primavera",
     "summer": "Verano",
@@ -86,10 +88,12 @@
   "roster": {
     "classRoster": "Lista de Clase",
     "addStudent": "Agregar Estudiante",
+    "addStudents": "Agregar Estudiantes",
     "searchStudent": "Buscar Estudiante",
     "typeNameOrEmail": "Escribe nombre o correo...",
-    "selectStudent": "Selecciona un estudiante:",
-    "selected": "Seleccionado",
+    "selectStudent": "Selecciona estudiantes (haz clic para seleccionar/deseleccionar):",
+    "selectStudentError": "Por favor selecciona al menos un estudiante",
+    "selected": "Seleccionados",
     "name": "Nombre",
     "email": "Correo",
     "status": "Estado",
@@ -102,7 +106,8 @@
     "noStudentsFound": "No se encontraron estudiantes",
     "adding": "Agregando...",
     "removeStudent": "¿Estás seguro de que quieres eliminar a este estudiante?",
-    "searchByNameOrEmail": "Busca un estudiante por nombre o correo para agregarlo a esta clase."
+    "searchByNameOrEmail": "Busca estudiantes por nombre o correo. Haz clic para seleccionar múltiples estudiantes.",
+    "clearSelection": "Limpiar todo"
   },
   "grades": {
     "gradebook": "Libro de Calificaciones",
@@ -144,8 +149,11 @@
     "createSubject": "Crear Materia",
     "addNewSubject": "Agregar una nueva materia de curso",
     "subjectCode": "Código de Materia",
+    "subjectCodePlaceholder": "ej: MAT101",
     "subjectName": "Nombre de Materia",
+    "subjectNamePlaceholder": "ej: Introducción a las Matemáticas",
     "description": "Descripción",
+    "descriptionPlaceholder": "Breve descripción de la materia",
     "code": "Código",
     "noSubjects": "Aún no hay materias",
     "createFirstSubject": "Crear Primera Materia",
@@ -165,9 +173,7 @@
     "office": "Oficina",
     "department": "Departamento",
     "notProvided": "No proporcionado",
-    "accountDetails": "Detalles de la Cuenta",
     "accountCreated": "Cuenta Creada",
     "lastUpdated": "Última Actualización"
   }
 }
-

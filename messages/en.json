@@ -66,7 +66,9 @@
     "year": "Year",
     "semester": "Semester",
     "groupCode": "Group Code",
+    "groupCodePlaceholder": "e.g., A, B, 101",
     "schedule": "Schedule",
+    "schedulePlaceholder": "e.g., Mon/Wed/Fri 10:00-11:30",
     "optional": "Optional",
     "spring": "Spring",
     "summer": "Summer",
@@ -86,9 +88,11 @@
   "roster": {
     "classRoster": "Class Roster",
     "addStudent": "Add Student",
+    "addStudents": "Add Students",
     "searchStudent": "Search Student",
     "typeNameOrEmail": "Type name or email...",
-    "selectStudent": "Select a student:",
+    "selectStudent": "Select students (click to select/deselect):",
+    "selectStudentError": "Please select at least one student",
     "selected": "Selected",
     "name": "Name",
     "email": "Email",
@@ -102,7 +106,8 @@
     "noStudentsFound": "No students found",
     "adding": "Adding...",
     "removeStudent": "Are you sure you want to remove this student?",
-    "searchByNameOrEmail": "Search for a student by name or email to add them to this class."
+    "searchByNameOrEmail": "Search for students by name or email. Click to select multiple students.",
+    "clearSelection": "Clear all"
   },
   "grades": {
     "gradebook": "Gradebook",
@@ -144,8 +149,11 @@
     "createSubject": "Create Subject",
     "addNewSubject": "Add a new course subject",
     "subjectCode": "Subject Code",
+    "subjectCodePlaceholder": "e.g., CS101",
     "subjectName": "Subject Name",
+    "subjectNamePlaceholder": "e.g., Introduction to Computer Science",
     "description": "Description",
+    "descriptionPlaceholder": "Brief description of the subject",
     "code": "Code",
     "noSubjects": "No subjects yet",
     "createFirstSubject": "Create First Subject",
@@ -165,9 +173,7 @@
     "office": "Office",
     "department": "Department",
     "notProvided": "Not provided",
-    "accountDetails": "Account Details",
     "accountCreated": "Account Created",
     "lastUpdated": "Last Updated"
   }
 }
-

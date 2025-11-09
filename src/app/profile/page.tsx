@@ -21,9 +21,11 @@ import {
 import { useAuthStore } from "@/src/lib/stores/auth-store";
 import { usersApi } from "@/src/lib/api/users";
 import { UserRole, UpdateUserDto } from "@/src/types/api";
+import { useT } from "@/src/lib/i18n/provider";
 
 export default function ProfilePage() {
   const router = useRouter();
+  const t = useT();
   const user = useAuthStore((state) => state.user);
   const setUser = useAuthStore((state) => state.setUser);
 
@@ -100,7 +102,7 @@ export default function ProfilePage() {
     <Box p="6">
       <Box mb="6">
         <Button variant="ghost" onClick={() => router.push("/dashboard")}>
-          <ArrowLeftIcon /> Back to Dashboard
+          <ArrowLeftIcon /> {t("navigation.backToDashboard")}
         </Button>
       </Box>
 
@@ -108,9 +110,11 @@ export default function ProfilePage() {
         <Card size="4">
           <Flex direction="column" gap="4">
             <Flex justify="between" align="center">
-              <Heading size="6">Profile</Heading>
+              <Heading size="6">{t("profile.profile")}</Heading>
               <Badge color="blue" size="2">
-                {user.role}
+                {user.role === UserRole.TEACHER
+                  ? t("auth.teacher")
+                  : t("auth.student")}
               </Badge>
             </Flex>
 
@@ -119,7 +123,7 @@ export default function ProfilePage() {
                 <Callout.Icon>
                   <CheckIcon />
                 </Callout.Icon>
-                <Callout.Text>Profile updated successfully</Callout.Text>
+                <Callout.Text>{t("profile.profileUpdated")}</Callout.Text>
               </Callout.Root>
             )}
 
@@ -136,7 +140,7 @@ export default function ProfilePage() {
               {/* Full Name */}
               <Box>
                 <Text as="label" size="2" weight="bold" mb="1">
-                  Full Name:
+                  {t("auth.fullName")}:
                 </Text>
                 {isEditing ? (
                   <TextField.Root
@@ -153,7 +157,7 @@ export default function ProfilePage() {
               {/* Email */}
               <Box>
                 <Text as="label" size="2" weight="bold" mb="1">
-                  Email:
+                  {t("auth.email")}:
                 </Text>
                 {isEditing ? (
                   <TextField.Root
@@ -171,11 +175,13 @@ export default function ProfilePage() {
               {/* Role (read-only) */}
               <Box>
                 <Text as="label" size="2" weight="bold" mb="1">
-                  Role:
+                  {t("auth.role")}:
                 </Text>
                 <Text size="3" color="gray">
                   &nbsp;
-                  {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+                  {user.role === UserRole.TEACHER
+                    ? t("auth.teacher")
+                    : t("auth.student")}
                 </Text>
               </Box>
 
@@ -185,7 +191,7 @@ export default function ProfilePage() {
                   {/* Phone */}
                   <Box>
                     <Text as="label" size="2" weight="bold" mb="1">
-                      Phone:
+                      {t("profile.phone")}:
                     </Text>
                     {isEditing ? (
                       <TextField.Root
@@ -197,7 +203,7 @@ export default function ProfilePage() {
                       />
                     ) : (
                       <Text size="3">
-                        &nbsp;{user.metadata?.phone || "Not provided"}
+                        &nbsp;{user.metadata?.phone || t("profile.notProvided")}
                       </Text>
                     )}
                   </Box>
@@ -205,7 +211,7 @@ export default function ProfilePage() {
                   {/* Office */}
                   <Box>
                     <Text as="label" size="2" weight="bold" mb="1">
-                      Office:
+                      {t("profile.office")}:
                     </Text>
                     {isEditing ? (
                       <TextField.Root
@@ -217,7 +223,8 @@ export default function ProfilePage() {
                       />
                     ) : (
                       <Text size="3">
-                        &nbsp;{user.metadata?.office || "Not provided"}
+                        &nbsp;
+                        {user.metadata?.office || t("profile.notProvided")}
                       </Text>
                     )}
                   </Box>
@@ -225,7 +232,7 @@ export default function ProfilePage() {
                   {/* Department */}
                   <Box>
                     <Text as="label" size="2" weight="bold" mb="1">
-                      Department:
+                      {t("profile.department")}:
                     </Text>
                     {isEditing ? (
                       <TextField.Root
@@ -240,7 +247,8 @@ export default function ProfilePage() {
                       />
                     ) : (
                       <Text size="3">
-                        &nbsp;{user.metadata?.department || "Not provided"}
+                        &nbsp;
+                        {user.metadata?.department || t("profile.notProvided")}
                       </Text>
                     )}
                   </Box>
@@ -249,13 +257,10 @@ export default function ProfilePage() {
 
               {/* Account Details */}
               <Box pt="3" style={{ borderTop: "1px solid var(--gray-6)" }}>
-                <Text size="2" color="gray" mb="2">
-                  Account Details
-                </Text>
                 <Flex direction="column" gap="2">
                   <Flex justify="between">
                     <Text size="2" color="gray">
-                      Account Created:
+                      {t("profile.accountCreated")}:
                     </Text>
                     <Text size="2">
                       {new Date(user.createdAt).toLocaleDateString()}
@@ -263,7 +268,7 @@ export default function ProfilePage() {
                   </Flex>
                   <Flex justify="between">
                     <Text size="2" color="gray">
-                      Last Updated:
+                      {t("profile.lastUpdated")}:
                     </Text>
                     <Text size="2">
                       {new Date(user.updatedAt).toLocaleDateString()}
@@ -283,14 +288,14 @@ export default function ProfilePage() {
                       onClick={handleCancel}
                       disabled={isSaving}
                     >
-                      Cancel
+                      {t("common.cancel")}
                     </Button>
                     <Button
                       style={{ flex: 1 }}
                       onClick={handleSave}
                       disabled={isSaving}
                     >
-                      {isSaving ? "Saving..." : "Save Changes"}
+                      {isSaving ? t("class.saving") : t("profile.saveChanges")}
                     </Button>
                   </>
                 ) : (
@@ -298,7 +303,7 @@ export default function ProfilePage() {
                     style={{ flex: 1 }}
                     onClick={() => setIsEditing(true)}
                   >
-                    Edit Profile
+                    {t("profile.editProfile")}
                   </Button>
                 )}
               </Flex>
