@@ -10,13 +10,10 @@ import {
   Heading,
   Text,
   TextField,
-  Callout,
   Badge,
 } from "@radix-ui/themes";
 import {
   ArrowLeftIcon,
-  InfoCircledIcon,
-  CheckIcon,
   PersonIcon,
   EnvelopeClosedIcon,
   MobileIcon,
@@ -27,6 +24,7 @@ import { useAuthStore } from "@/src/lib/stores/auth-store";
 import { usersApi } from "@/src/lib/api/users";
 import { UserRole, UpdateUserDto } from "@/src/types/api";
 import { useT } from "@/src/lib/i18n/provider";
+import toast from "react-hot-toast";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -36,8 +34,6 @@ export default function ProfilePage() {
 
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState(false);
 
   const [formData, setFormData] = useState({
     fullName: user?.fullName || "",
@@ -50,8 +46,6 @@ export default function ProfilePage() {
   const handleSave = async () => {
     if (!user?.id) return;
 
-    setError("");
-    setSuccess(false);
     setIsSaving(true);
 
     try {
@@ -73,15 +67,14 @@ export default function ProfilePage() {
 
       if (response.success && response.data) {
         setUser(response.data);
-        setSuccess(true);
         setIsEditing(false);
-        setTimeout(() => setSuccess(false), 3000);
+        toast.success(t("profile.profileUpdated"));
       }
     } catch (err: unknown) {
       const errorMessage =
         (err as { response?: { data?: { message?: string } } })?.response?.data
-          ?.message || "Failed to update profile";
-      setError(errorMessage);
+          ?.message || t("profile.failedToUpdate");
+      toast.error(errorMessage);
     } finally {
       setIsSaving(false);
     }
@@ -96,7 +89,6 @@ export default function ProfilePage() {
       department: user?.metadata?.department || "",
     });
     setIsEditing(false);
-    setError("");
   };
 
   if (!user) {
@@ -152,24 +144,6 @@ export default function ProfilePage() {
             )}
           </Flex>
         </Card>
-
-        {success && (
-          <Callout.Root color="green" mb="4">
-            <Callout.Icon>
-              <CheckIcon />
-            </Callout.Icon>
-            <Callout.Text>{t("profile.profileUpdated")}</Callout.Text>
-          </Callout.Root>
-        )}
-
-        {error && (
-          <Callout.Root color="red" mb="4">
-            <Callout.Icon>
-              <InfoCircledIcon />
-            </Callout.Icon>
-            <Callout.Text>{error}</Callout.Text>
-          </Callout.Root>
-        )}
 
         {/* Basic Information Card */}
         <Card size="4" mb="4">
@@ -326,11 +300,7 @@ export default function ProfilePage() {
               {t("profile.accountDetails")}
             </Heading>
             <Flex direction="column" gap="3">
-              <Flex
-                justify="between"
-                align="center"
-                p="3"
-              >
+              <Flex justify="between" align="center" p="3">
                 <Text size="2" weight="medium" color="gray">
                   {t("profile.accountCreated")}
                 </Text>
@@ -338,11 +308,7 @@ export default function ProfilePage() {
                   {new Date(user.createdAt).toLocaleDateString()}
                 </Text>
               </Flex>
-              <Flex
-                justify="between"
-                align="center"
-                p="3"
-              >
+              <Flex justify="between" align="center" p="3">
                 <Text size="2" weight="medium" color="gray">
                   {t("profile.lastUpdated")}
                 </Text>

@@ -12,7 +12,9 @@
     "yes": "Sí",
     "no": "No",
     "submit": "Enviar",
-    "close": "Cerrar"
+    "close": "Cerrar",
+    "notFound": "Página No Encontrada",
+    "notFoundMessage": "La página que buscas no existe o no tienes permiso para acceder a ella."
   },
   "auth": {
     "login": "Iniciar Sesión",
@@ -140,7 +142,15 @@
     "gradesWillAppear": "Las calificaciones aparecerán aquí una vez que tu profesor las agregue",
     "breakdownByType": "Desglose por Tipo",
     "grade": "calificación",
-    "grades": "calificaciones"
+    "grades": "calificaciones",
+    "gradeUpdated": "Calificación actualizada exitosamente",
+    "gradeAdded": "Calificación agregada exitosamente",
+    "assessmentCreated": "Evaluación creada exitosamente",
+    "failedToUpdate": "Error al actualizar la calificación",
+    "failedToAdd": "Error al agregar la calificación",
+    "failedToCreate": "Error al crear la evaluación",
+    "recommendationDismissed": "Recomendación descartada",
+    "failedToDismiss": "Error al descartar la recomendación"
   },
   "subjects": {
     "manageSubjects": "Gestionar Materias",
@@ -168,6 +178,7 @@
     "editProfile": "Editar Perfil",
     "saveChanges": "Guardar Cambios",
     "profileUpdated": "Perfil actualizado exitosamente",
+    "failedToUpdate": "Error al actualizar el perfil",
     "professionalInfo": "Información Profesional",
     "phone": "Teléfono",
     "office": "Oficina",

@@ -34,6 +34,7 @@ import {
   GradeResponse,
 } from "@/src/types/api";
 import { useT } from "@/src/lib/i18n/provider";
+import toast from "react-hot-toast";
 
 interface TeacherClassViewProps {
   classId: string;
@@ -117,11 +118,13 @@ export function TeacherClassView({ classId }: TeacherClassViewProps) {
         assessmentName: "",
         maxScore: 100,
       });
+      toast.success(t("grades.assessmentCreated"));
     } catch (err: unknown) {
       const errorMessage =
         (err as { response?: { data?: { message?: string } } })?.response?.data
-          ?.message || "Failed to create assessment";
+          ?.message || t("grades.failedToCreate");
       setError(errorMessage);
+      toast.error(errorMessage);
     }
   };
 
@@ -140,8 +143,10 @@ export function TeacherClassView({ classId }: TeacherClassViewProps) {
       });
       setEditingGradeId(null);
       setEditScore("");
+      toast.success(t("grades.gradeUpdated"));
     } catch (err) {
       console.error("Failed to update grade:", err);
+      toast.error(t("grades.failedToUpdate"));
     }
   };
 
@@ -179,8 +184,10 @@ export function TeacherClassView({ classId }: TeacherClassViewProps) {
       });
       setEditingCell(null);
       setNewScore("");
+      toast.success(t("grades.gradeAdded"));
     } catch (err) {
       console.error("Failed to add grade:", err);
+      toast.error(t("grades.failedToAdd"));
     }
   };
 
@@ -431,6 +438,7 @@ export function TeacherClassView({ classId }: TeacherClassViewProps) {
                                         onChange={(e) =>
                                           setEditScore(e.target.value)
                                         }
+                                        onFocus={(e) => e.target.select()}
                                         onKeyDown={(e) => {
                                           if (e.key === "Enter") {
                                             e.preventDefault();
@@ -483,6 +491,7 @@ export function TeacherClassView({ classId }: TeacherClassViewProps) {
                                     onChange={(e) =>
                                       setNewScore(e.target.value)
                                     }
+                                    onFocus={(e) => e.target.select()}
                                     onKeyDown={(e) => {
                                       if (e.key === "Enter" && newScore) {
                                         e.preventDefault();

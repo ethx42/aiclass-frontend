@@ -12,7 +12,9 @@
     "yes": "Yes",
     "no": "No",
     "submit": "Submit",
-    "close": "Close"
+    "close": "Close",
+    "notFound": "Page Not Found",
+    "notFoundMessage": "The page you're looking for doesn't exist or you don't have permission to access it."
   },
   "auth": {
     "login": "Log In",
@@ -140,7 +142,15 @@
     "gradesWillAppear": "Grades will appear here once your teacher adds them",
     "breakdownByType": "Breakdown by Type",
     "grade": "grade",
-    "grades": "grades"
+    "grades": "grades",
+    "gradeUpdated": "Grade updated successfully",
+    "gradeAdded": "Grade added successfully",
+    "assessmentCreated": "Assessment created successfully",
+    "failedToUpdate": "Failed to update grade",
+    "failedToAdd": "Failed to add grade",
+    "failedToCreate": "Failed to create assessment",
+    "recommendationDismissed": "Recommendation dismissed",
+    "failedToDismiss": "Failed to dismiss recommendation"
   },
   "subjects": {
     "manageSubjects": "Manage Subjects",
@@ -168,6 +178,7 @@
     "editProfile": "Edit Profile",
     "saveChanges": "Save Changes",
     "profileUpdated": "Profile updated successfully",
+    "failedToUpdate": "Failed to update profile",
     "professionalInfo": "Professional Information",
     "phone": "Phone",
     "office": "Office",

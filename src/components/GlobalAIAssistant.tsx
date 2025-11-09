@@ -19,11 +19,18 @@ import {
   InfoCircledIcon,
 } from "@radix-ui/react-icons";
 import { useAuthStore } from "@/src/lib/stores/auth-store";
-import { useRecommendations } from "@/src/lib/hooks/use-recommendations";
+import {
+  useRecommendations,
+  useDeleteRecommendation,
+} from "@/src/lib/hooks/use-recommendations";
+import { UserRole } from "@/src/types/api";
+import toast from "react-hot-toast";
+import { useT } from "@/src/lib/i18n/provider";
 
 export function GlobalAIAssistant() {
   const [isOpen, setIsOpen] = useState(false);
   const user = useAuthStore((state) => state.user);
+  const t = useT();
 
   const { data, isLoading, error } = useRecommendations({
     recipientId: user?.id || "",
@@ -31,8 +38,19 @@ export function GlobalAIAssistant() {
     size: 50,
   });
 
+  const deleteRecommendation = useDeleteRecommendation();
+
   const recommendations = data?.data?.content || [];
   const unreadCount = recommendations.length;
+
+  const handleDismiss = async (recommendationId: string) => {
+    try {
+      await deleteRecommendation.mutateAsync(recommendationId);
+      toast.success(t("grades.recommendationDismissed"));
+    } catch {
+      toast.error(t("grades.failedToDismiss"));
+    }
+  };
 
   if (!user) return null;
 
@@ -158,8 +176,30 @@ export function GlobalAIAssistant() {
                 <ScrollArea style={{ height: "100%" }}>
                   <Flex direction="column" gap="3">
                     {recommendations.map((recommendation) => (
-                      <Card key={recommendation.id}>
-                        <Flex direction="column" gap="2">
+                      <Card
+                        key={recommendation.id}
+                        style={{ position: "relative" }}
+                      >
+                        {user?.role === UserRole.TEACHER && (
+                          <IconButton
+                            size="1"
+                            variant="ghost"
+                            color="gray"
+                            style={{
+                              position: "absolute",
+                              top: "8px",
+                              right: "8px",
+                            }}
+                            onClick={() => handleDismiss(recommendation.id)}
+                          >
+                            <Cross2Icon />
+                          </IconButton>
+                        )}
+                        <Flex
+                          direction="column"
+                          gap="2"
+                          pr={user?.role === UserRole.TEACHER ? "5" : "2"}
+                        >
                           <Flex justify="between" align="start" gap="2">
                             <Badge color="blue" size="1">
                               {recommendation.audience}
