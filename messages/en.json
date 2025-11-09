@@ -112,7 +112,6 @@
   "grades": {
     "gradebook": "Gradebook",
     "studentsEnrolled": "students enrolled",
-    "clickEmptyCells": "Click on empty cells (-) to add grades",
     "addGrade": "Add Assessment",
     "addFirstGrade": "Add First Assessment",
     "noGrades": "No grades yet",
@@ -169,10 +168,12 @@
     "editProfile": "Edit Profile",
     "saveChanges": "Save Changes",
     "profileUpdated": "Profile updated successfully",
+    "professionalInfo": "Professional Information",
     "phone": "Phone",
     "office": "Office",
     "department": "Department",
     "notProvided": "Not provided",
+    "accountDetails": "Account Details",
     "accountCreated": "Account Created",
     "lastUpdated": "Last Updated"
   }

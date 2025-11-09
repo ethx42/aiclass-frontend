@@ -17,6 +17,11 @@ import {
   ArrowLeftIcon,
   InfoCircledIcon,
   CheckIcon,
+  PersonIcon,
+  EnvelopeClosedIcon,
+  MobileIcon,
+  HomeIcon,
+  BackpackIcon,
 } from "@radix-ui/react-icons";
 import { useAuthStore } from "@/src/lib/stores/auth-store";
 import { usersApi } from "@/src/lib/api/users";
@@ -106,59 +111,103 @@ export default function ProfilePage() {
         </Button>
       </Box>
 
-      <Box style={{ maxWidth: "600px", margin: "0 auto" }}>
-        <Card size="4">
-          <Flex direction="column" gap="4">
-            <Flex justify="between" align="center">
-              <Heading size="6">{t("profile.profile")}</Heading>
-              <Badge color="blue" size="2">
-                {user.role === UserRole.TEACHER
-                  ? t("auth.teacher")
-                  : t("auth.student")}
-              </Badge>
+      <Box style={{ maxWidth: "900px", margin: "0 auto" }}>
+        {/* Header with Avatar */}
+        <Card size="4" mb="4">
+          <Flex align="center" gap="4">
+            {/* Avatar with Initials */}
+            <Box
+              style={{
+                width: "80px",
+                height: "80px",
+                borderRadius: "50%",
+                background: "var(--accent-9)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "32px",
+                fontWeight: "bold",
+                color: "white",
+              }}
+            >
+              {user.fullName?.charAt(0).toUpperCase() || "U"}
+            </Box>
+            <Flex direction="column" gap="2" style={{ flex: 1 }}>
+              <Flex align="center" gap="3">
+                <Heading size="7">{user.fullName}</Heading>
+                <Badge color="blue" size="2">
+                  {user.role === UserRole.TEACHER
+                    ? t("auth.teacher")
+                    : t("auth.student")}
+                </Badge>
+              </Flex>
+              <Text size="3" color="gray">
+                {user.email}
+              </Text>
             </Flex>
-
-            {success && (
-              <Callout.Root color="green">
-                <Callout.Icon>
-                  <CheckIcon />
-                </Callout.Icon>
-                <Callout.Text>{t("profile.profileUpdated")}</Callout.Text>
-              </Callout.Root>
+            {!isEditing && (
+              <Button onClick={() => setIsEditing(true)} size="3">
+                {t("profile.editProfile")}
+              </Button>
             )}
+          </Flex>
+        </Card>
 
-            {error && (
-              <Callout.Root color="red">
-                <Callout.Icon>
-                  <InfoCircledIcon />
-                </Callout.Icon>
-                <Callout.Text>{error}</Callout.Text>
-              </Callout.Root>
-            )}
+        {success && (
+          <Callout.Root color="green" mb="4">
+            <Callout.Icon>
+              <CheckIcon />
+            </Callout.Icon>
+            <Callout.Text>{t("profile.profileUpdated")}</Callout.Text>
+          </Callout.Root>
+        )}
+
+        {error && (
+          <Callout.Root color="red" mb="4">
+            <Callout.Icon>
+              <InfoCircledIcon />
+            </Callout.Icon>
+            <Callout.Text>{error}</Callout.Text>
+          </Callout.Root>
+        )}
+
+        {/* Basic Information Card */}
+        <Card size="4" mb="4">
+          <Flex direction="column" gap="4">
+            <Heading size="5" mb="2">
+              {t("profile.profile")}
+            </Heading>
 
             <Flex direction="column" gap="4">
               {/* Full Name */}
               <Box>
-                <Text as="label" size="2" weight="bold" mb="1">
-                  {t("auth.fullName")}:
-                </Text>
+                <Flex align="center" gap="2" mb="2">
+                  <PersonIcon />
+                  <Text size="2" weight="bold" color="gray">
+                    {t("auth.fullName")}
+                  </Text>
+                </Flex>
                 {isEditing ? (
                   <TextField.Root
                     value={formData.fullName}
                     onChange={(e) =>
                       setFormData({ ...formData, fullName: e.target.value })
                     }
+                    size="3"
                   />
                 ) : (
-                  <Text size="3"> {user.fullName}</Text>
+                  <Text size="4">{user.fullName}</Text>
                 )}
               </Box>
 
               {/* Email */}
               <Box>
-                <Text as="label" size="2" weight="bold" mb="1">
-                  {t("auth.email")}:
-                </Text>
+                <Flex align="center" gap="2" mb="2">
+                  <EnvelopeClosedIcon />
+                  <Text size="2" weight="bold" color="gray">
+                    {t("auth.email")}
+                  </Text>
+                </Flex>
                 {isEditing ? (
                   <TextField.Root
                     type="email"
@@ -166,150 +215,162 @@ export default function ProfilePage() {
                     onChange={(e) =>
                       setFormData({ ...formData, email: e.target.value })
                     }
+                    size="3"
                   />
                 ) : (
-                  <Text size="3"> {user.email}</Text>
+                  <Text size="4">{user.email}</Text>
                 )}
               </Box>
+            </Flex>
+          </Flex>
+        </Card>
 
-              {/* Role (read-only) */}
-              <Box>
-                <Text as="label" size="2" weight="bold" mb="1">
-                  {t("auth.role")}:
-                </Text>
-                <Text size="3" color="gray">
-                  &nbsp;
-                  {user.role === UserRole.TEACHER
-                    ? t("auth.teacher")
-                    : t("auth.student")}
-                </Text>
-              </Box>
+        {/* Teacher Professional Information Card */}
+        {user.role === UserRole.TEACHER && (
+          <Card size="4" mb="4">
+            <Flex direction="column" gap="4">
+              <Heading size="5" mb="2">
+                {t("profile.professionalInfo")}
+              </Heading>
 
-              {/* Teacher-specific metadata fields */}
-              {user.role === UserRole.TEACHER && (
-                <>
-                  {/* Phone */}
-                  <Box>
-                    <Text as="label" size="2" weight="bold" mb="1">
-                      {t("profile.phone")}:
-                    </Text>
-                    {isEditing ? (
-                      <TextField.Root
-                        value={formData.phone}
-                        onChange={(e) =>
-                          setFormData({ ...formData, phone: e.target.value })
-                        }
-                        placeholder="+1-555-0123"
-                      />
-                    ) : (
-                      <Text size="3">
-                        &nbsp;{user.metadata?.phone || t("profile.notProvided")}
-                      </Text>
-                    )}
-                  </Box>
-
-                  {/* Office */}
-                  <Box>
-                    <Text as="label" size="2" weight="bold" mb="1">
-                      {t("profile.office")}:
-                    </Text>
-                    {isEditing ? (
-                      <TextField.Root
-                        value={formData.office}
-                        onChange={(e) =>
-                          setFormData({ ...formData, office: e.target.value })
-                        }
-                        placeholder="Building A, Room 101"
-                      />
-                    ) : (
-                      <Text size="3">
-                        &nbsp;
-                        {user.metadata?.office || t("profile.notProvided")}
-                      </Text>
-                    )}
-                  </Box>
-
-                  {/* Department */}
-                  <Box>
-                    <Text as="label" size="2" weight="bold" mb="1">
-                      {t("profile.department")}:
-                    </Text>
-                    {isEditing ? (
-                      <TextField.Root
-                        value={formData.department}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            department: e.target.value,
-                          })
-                        }
-                        placeholder="Computer Science"
-                      />
-                    ) : (
-                      <Text size="3">
-                        &nbsp;
-                        {user.metadata?.department || t("profile.notProvided")}
-                      </Text>
-                    )}
-                  </Box>
-                </>
-              )}
-
-              {/* Account Details */}
-              <Box pt="3" style={{ borderTop: "1px solid var(--gray-6)" }}>
-                <Flex direction="column" gap="2">
-                  <Flex justify="between">
-                    <Text size="2" color="gray">
-                      {t("profile.accountCreated")}:
-                    </Text>
-                    <Text size="2">
-                      {new Date(user.createdAt).toLocaleDateString()}
+              <Flex direction="column" gap="4">
+                {/* Phone */}
+                <Box>
+                  <Flex align="center" gap="2" mb="2">
+                    <MobileIcon />
+                    <Text size="2" weight="bold" color="gray">
+                      {t("profile.phone")}
                     </Text>
                   </Flex>
-                  <Flex justify="between">
-                    <Text size="2" color="gray">
-                      {t("profile.lastUpdated")}:
+                  {isEditing ? (
+                    <TextField.Root
+                      value={formData.phone}
+                      onChange={(e) =>
+                        setFormData({ ...formData, phone: e.target.value })
+                      }
+                      placeholder="+1-555-0123"
+                      size="3"
+                    />
+                  ) : (
+                    <Text size="4">
+                      {user.metadata?.phone || (
+                        <Text color="gray">{t("profile.notProvided")}</Text>
+                      )}
                     </Text>
-                    <Text size="2">
-                      {new Date(user.updatedAt).toLocaleDateString()}
+                  )}
+                </Box>
+
+                {/* Office */}
+                <Box>
+                  <Flex align="center" gap="2" mb="2">
+                    <HomeIcon />
+                    <Text size="2" weight="bold" color="gray">
+                      {t("profile.office")}
                     </Text>
                   </Flex>
-                </Flex>
-              </Box>
+                  {isEditing ? (
+                    <TextField.Root
+                      value={formData.office}
+                      onChange={(e) =>
+                        setFormData({ ...formData, office: e.target.value })
+                      }
+                      placeholder="Building A, Room 101"
+                      size="3"
+                    />
+                  ) : (
+                    <Text size="4">
+                      {user.metadata?.office || (
+                        <Text color="gray">{t("profile.notProvided")}</Text>
+                      )}
+                    </Text>
+                  )}
+                </Box>
 
-              {/* Actions */}
-              <Flex gap="3" mt="2">
-                {isEditing ? (
-                  <>
-                    <Button
-                      variant="soft"
-                      color="gray"
-                      style={{ flex: 1 }}
-                      onClick={handleCancel}
-                      disabled={isSaving}
-                    >
-                      {t("common.cancel")}
-                    </Button>
-                    <Button
-                      style={{ flex: 1 }}
-                      onClick={handleSave}
-                      disabled={isSaving}
-                    >
-                      {isSaving ? t("class.saving") : t("profile.saveChanges")}
-                    </Button>
-                  </>
-                ) : (
-                  <Button
-                    style={{ flex: 1 }}
-                    onClick={() => setIsEditing(true)}
-                  >
-                    {t("profile.editProfile")}
-                  </Button>
-                )}
+                {/* Department */}
+                <Box>
+                  <Flex align="center" gap="2" mb="2">
+                    <BackpackIcon />
+                    <Text size="2" weight="bold" color="gray">
+                      {t("profile.department")}
+                    </Text>
+                  </Flex>
+                  {isEditing ? (
+                    <TextField.Root
+                      value={formData.department}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          department: e.target.value,
+                        })
+                      }
+                      placeholder="Computer Science"
+                      size="3"
+                    />
+                  ) : (
+                    <Text size="4">
+                      {user.metadata?.department || (
+                        <Text color="gray">{t("profile.notProvided")}</Text>
+                      )}
+                    </Text>
+                  )}
+                </Box>
+              </Flex>
+            </Flex>
+          </Card>
+        )}
+
+        {/* Account Details Card */}
+        <Card size="4" mb="4">
+          <Flex direction="column" gap="4">
+            <Heading size="5" mb="2">
+              {t("profile.accountDetails")}
+            </Heading>
+            <Flex direction="column" gap="3">
+              <Flex
+                justify="between"
+                align="center"
+                p="3"
+              >
+                <Text size="2" weight="medium" color="gray">
+                  {t("profile.accountCreated")}
+                </Text>
+                <Text size="3" weight="bold">
+                  {new Date(user.createdAt).toLocaleDateString()}
+                </Text>
+              </Flex>
+              <Flex
+                justify="between"
+                align="center"
+                p="3"
+              >
+                <Text size="2" weight="medium" color="gray">
+                  {t("profile.lastUpdated")}
+                </Text>
+                <Text size="3" weight="bold">
+                  {new Date(user.updatedAt).toLocaleDateString()}
+                </Text>
               </Flex>
             </Flex>
           </Flex>
         </Card>
+
+        {/* Action Buttons */}
+        {isEditing && (
+          <Flex gap="3" justify="end">
+            <Button
+              variant="soft"
+              color="gray"
+              size="3"
+              onClick={handleCancel}
+              disabled={isSaving}
+            >
+              {t("common.cancel")}
+            </Button>
+            <Button size="3" onClick={handleSave} disabled={isSaving}>
+              {isSaving ? t("class.saving") : t("profile.saveChanges")}
+            </Button>
+          </Flex>
+        )}
       </Box>
     </Box>
   );

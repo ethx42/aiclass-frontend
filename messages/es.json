@@ -112,7 +112,6 @@
   "grades": {
     "gradebook": "Libro de Calificaciones",
     "studentsEnrolled": "estudiantes inscritos",
-    "clickEmptyCells": "Haz clic en las celdas vacías (-) para agregar calificaciones",
     "addGrade": "Agregar Evaluación",
     "addFirstGrade": "Agregar Primera Evaluación",
     "noGrades": "Aún no hay calificaciones",
@@ -169,10 +168,12 @@
     "editProfile": "Editar Perfil",
     "saveChanges": "Guardar Cambios",
     "profileUpdated": "Perfil actualizado exitosamente",
+    "professionalInfo": "Información Profesional",
     "phone": "Teléfono",
     "office": "Oficina",
     "department": "Departamento",
     "notProvided": "No proporcionado",
+    "accountDetails": "Detalles de la Cuenta",
     "accountCreated": "Cuenta Creada",
     "lastUpdated": "Última Actualización"
   }

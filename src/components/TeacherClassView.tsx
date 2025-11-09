@@ -224,7 +224,6 @@ export function TeacherClassView({ classId }: TeacherClassViewProps) {
               <br />
               <Text size="2" color="gray">
                 {enrollments.length} {t("grades.studentsEnrolled")} ·{" "}
-                {t("grades.clickEmptyCells")}
               </Text>
             </Box>
             <Dialog.Root
@@ -432,8 +431,18 @@ export function TeacherClassView({ classId }: TeacherClassViewProps) {
                                         onChange={(e) =>
                                           setEditScore(e.target.value)
                                         }
+                                        onKeyDown={(e) => {
+                                          if (e.key === "Enter") {
+                                            e.preventDefault();
+                                            handleSaveEdit(grade.id);
+                                          } else if (e.key === "Escape") {
+                                            e.preventDefault();
+                                            handleCancelEdit();
+                                          }
+                                        }}
                                         style={{ width: "60px" }}
                                         step="0.1"
+                                        autoFocus
                                       />
                                       <IconButton
                                         size="1"
@@ -454,9 +463,7 @@ export function TeacherClassView({ classId }: TeacherClassViewProps) {
                                     </>
                                   ) : (
                                     <>
-                                      <Text>
-                                        {grade.score}/{grade.maxScore}
-                                      </Text>
+                                      <Text>{grade.score}</Text>
                                       <IconButton
                                         size="1"
                                         variant="ghost"
@@ -476,6 +483,15 @@ export function TeacherClassView({ classId }: TeacherClassViewProps) {
                                     onChange={(e) =>
                                       setNewScore(e.target.value)
                                     }
+                                    onKeyDown={(e) => {
+                                      if (e.key === "Enter" && newScore) {
+                                        e.preventDefault();
+                                        handleSaveNewGrade();
+                                      } else if (e.key === "Escape") {
+                                        e.preventDefault();
+                                        handleCancelNewGrade();
+                                      }
+                                    }}
                                     placeholder="Score"
                                     style={{ width: "60px" }}
                                     step="0.1"
