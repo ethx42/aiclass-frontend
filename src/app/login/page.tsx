@@ -1,16 +1,28 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/src/lib/hooks/use-auth';
 import { Box, Card, Flex, Heading, TextField, Button, Text, Callout } from '@radix-ui/themes';
-import { InfoCircledIcon } from '@radix-ui/react-icons';
+import { InfoCircledIcon, CheckIcon } from '@radix-ui/react-icons';
+import Link from 'next/link';
 
 export default function LoginPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showSignupSuccess, setShowSignupSuccess] = useState(false);
   const { login } = useAuth();
+
+  useEffect(() => {
+    if (searchParams.get('signup') === 'success') {
+      setShowSignupSuccess(true);
+      setTimeout(() => setShowSignupSuccess(false), 5000);
+    }
+  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,6 +59,17 @@ export default function LoginPage() {
                 Student Performance Management System
               </Text>
             </Box>
+
+            {showSignupSuccess && (
+              <Callout.Root color="green">
+                <Callout.Icon>
+                  <CheckIcon />
+                </Callout.Icon>
+                <Callout.Text>
+                  Account created successfully! Please log in.
+                </Callout.Text>
+              </Callout.Root>
+            )}
 
             {error && (
               <Callout.Root color="red">
@@ -98,9 +121,20 @@ export default function LoginPage() {
               </Flex>
             </form>
 
-            <Box style={{ textAlign: 'center', marginTop: '12px' }}>
+            <Flex justify="center" gap="2" style={{ marginTop: '12px' }}>
               <Text size="2" color="gray">
-                Demo credentials: teacher@university.edu / password123
+                Don't have an account?
+              </Text>
+              <Link href="/signup" style={{ textDecoration: 'none' }}>
+                <Text size="2" color="blue" style={{ cursor: 'pointer' }}>
+                  Sign Up
+                </Text>
+              </Link>
+            </Flex>
+
+            <Box style={{ textAlign: 'center', marginTop: '12px' }}>
+              <Text size="1" color="gray">
+                Demo: teacher@university.edu / password123
               </Text>
             </Box>
           </Flex>

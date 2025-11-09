@@ -46,8 +46,11 @@ export function TeacherClassView({ classId }: TeacherClassViewProps) {
   const updateGrade = useUpdateGrade();
 
   const [isAddGradeDialogOpen, setIsAddGradeDialogOpen] = useState(false);
+  const [isAddAssessmentDialogOpen, setIsAddAssessmentDialogOpen] = useState(false);
   const [editingGradeId, setEditingGradeId] = useState<string | null>(null);
+  const [editingCell, setEditingCell] = useState<{ studentId: string; assessment: string } | null>(null);
   const [editScore, setEditScore] = useState('');
+  const [newScore, setNewScore] = useState('');
   const [error, setError] = useState('');
 
   const [gradeFormData, setGradeFormData] = useState<GradeFormData>({
@@ -55,6 +58,12 @@ export function TeacherClassView({ classId }: TeacherClassViewProps) {
     assessmentKind: AssessmentKind.EXAM,
     assessmentName: '',
     score: 0,
+    maxScore: 100,
+  });
+
+  const [assessmentFormData, setAssessmentFormData] = useState({
+    assessmentKind: AssessmentKind.EXAM,
+    assessmentName: '',
     maxScore: 100,
   });
 
@@ -110,6 +119,55 @@ export function TeacherClassView({ classId }: TeacherClassViewProps) {
     setEditScore('');
   };
 
+  const handleAddAssessment = async () => {
+    setError('');
+    // This creates the assessment column (will show as "-" for all students initially)
+    // The assessment will appear once any student has a grade for it
+    setIsAddAssessmentDialogOpen(false);
+    setAssessmentFormData({
+      assessmentKind: AssessmentKind.EXAM,
+      assessmentName: '',
+      maxScore: 100,
+    });
+  };
+
+  const handleCellClick = (studentId: string, assessment: string) => {
+    setEditingCell({ studentId, assessment });
+    setNewScore('');
+  };
+
+  const handleSaveNewGrade = async () => {
+    if (!editingCell) return;
+
+    const [kind, name] = editingCell.assessment.split(':');
+    const assessment = assessments.find((a) => a === editingCell.assessment);
+    
+    // Get maxScore from existing grade with this assessment or use default
+    const existingGrade = grades.find((g) => `${g.assessmentKind}:${g.assessmentName}` === assessment);
+    const maxScore = existingGrade?.maxScore || 100;
+
+    try {
+      await createGrade.mutateAsync({
+        classId,
+        studentId: editingCell.studentId,
+        assessmentKind: kind as AssessmentKind,
+        assessmentName: name,
+        score: parseFloat(newScore),
+        maxScore,
+        gradedAt: new Date().toISOString(),
+      });
+      setEditingCell(null);
+      setNewScore('');
+    } catch (err) {
+      console.error('Failed to add grade:', err);
+    }
+  };
+
+  const handleCancelNewGrade = () => {
+    setEditingCell(null);
+    setNewScore('');
+  };
+
   // Group grades by student
   const gradesByStudent = grades.reduce((acc, grade) => {
     const studentId = grade.studentId;
@@ -143,7 +201,7 @@ export function TeacherClassView({ classId }: TeacherClassViewProps) {
                 Gradebook
               </Text>
               <Text size="2" color="gray">
-                {enrollments.length} students enrolled
+                {enrollments.length} students enrolled · Click on empty cells (-) to add grades
               </Text>
             </Box>
             <Dialog.Root open={isAddGradeDialogOpen} onOpenChange={setIsAddGradeDialogOpen}>
@@ -340,6 +398,10 @@ export function TeacherClassView({ classId }: TeacherClassViewProps) {
                             (g) => `${g.assessmentKind}:${g.assessmentName}` === assessment
                           );
                           
+                          const isEditingThisCell = 
+                            editingCell?.studentId === enrollment.studentId && 
+                            editingCell?.assessment === assessment;
+                          
                           return (
                             <Table.Cell key={assessment}>
                               {grade ? (
@@ -352,6 +414,7 @@ export function TeacherClassView({ classId }: TeacherClassViewProps) {
                                         value={editScore}
                                         onChange={(e) => setEditScore(e.target.value)}
                                         style={{ width: '60px' }}
+                                        step="0.1"
                                       />
                                       <IconButton
                                         size="1"
@@ -385,8 +448,48 @@ export function TeacherClassView({ classId }: TeacherClassViewProps) {
                                     </>
                                   )}
                                 </Flex>
+                              ) : isEditingThisCell ? (
+                                <Flex align="center" gap="2">
+                                  <TextField.Root
+                                    size="1"
+                                    type="number"
+                                    value={newScore}
+                                    onChange={(e) => setNewScore(e.target.value)}
+                                    placeholder="Score"
+                                    style={{ width: '60px' }}
+                                    step="0.1"
+                                    autoFocus
+                                  />
+                                  <IconButton
+                                    size="1"
+                                    variant="soft"
+                                    color="green"
+                                    onClick={handleSaveNewGrade}
+                                    disabled={!newScore}
+                                  >
+                                    <CheckIcon />
+                                  </IconButton>
+                                  <IconButton
+                                    size="1"
+                                    variant="soft"
+                                    color="red"
+                                    onClick={handleCancelNewGrade}
+                                  >
+                                    <Cross2Icon />
+                                  </IconButton>
+                                </Flex>
                               ) : (
-                                <Text color="gray">-</Text>
+                                <Box
+                                  onClick={() => handleCellClick(enrollment.studentId, assessment)}
+                                  style={{
+                                    cursor: 'pointer',
+                                    padding: '4px',
+                                    borderRadius: '4px',
+                                  }}
+                                  className="hover:bg-gray-3"
+                                >
+                                  <Text color="gray">-</Text>
+                                </Box>
                               )}
                             </Table.Cell>
                           );

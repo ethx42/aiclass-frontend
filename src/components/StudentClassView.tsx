@@ -43,11 +43,12 @@ const getGradeColor = (percentage: number) => {
 
 export function StudentClassView({ classId }: StudentClassViewProps) {
   const user = useAuthStore((state) => state.user);
+  
+  // Backend only allows filtering by studentId for students, not both
   const { data: gradesData, isLoading, error } = useGrades({
-    classId,
     studentId: user?.id,
     page: 0,
-    size: 100,
+    size: 1000, // Get all grades to filter by classId in frontend
   });
 
   if (isLoading) {
@@ -71,7 +72,9 @@ export function StudentClassView({ classId }: StudentClassViewProps) {
     );
   }
 
-  const grades = gradesData?.data?.content || [];
+  // Get all grades and filter by this specific class
+  const allGrades = gradesData?.data?.content || [];
+  const grades = allGrades.filter((grade) => grade.classId === classId);
 
   // Calculate overall average
   const overallAverage =

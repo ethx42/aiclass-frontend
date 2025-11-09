@@ -4,7 +4,7 @@ import { Box, Flex, Grid, Heading, Text, Spinner, Callout } from '@radix-ui/them
 import { InfoCircledIcon } from '@radix-ui/react-icons';
 import { useAuthStore } from '@/src/lib/stores/auth-store';
 import { useEnrollments } from '@/src/lib/hooks/use-enrollments';
-import { ClassCard } from './ClassCard';
+import { EnrollmentCard } from './EnrollmentCard';
 import { EnrollmentStatus } from '@/src/types/api';
 
 export function StudentDashboard() {
@@ -74,7 +74,7 @@ export function StudentDashboard() {
         ) : (
           <Grid columns={{ initial: '1', sm: '2', lg: '3' }} gap="4">
             {enrollments.map((enrollment) => (
-              <ClassCard key={enrollment.id} classData={enrollment.classEntity} />
+              <EnrollmentCard key={enrollment.id} enrollment={enrollment} />
             ))}
           </Grid>
         )}

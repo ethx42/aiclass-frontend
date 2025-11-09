@@ -165,10 +165,20 @@ export interface Enrollment {
 export interface EnrollmentResponse {
   id: string;
   classId: string;
+  className: string;
+  subjectId?: string;
+  subjectCode?: string;
+  subjectName?: string;
+  teacherId?: string;
+  teacherName?: string;
+  year?: number;
+  semester?: Semester;
+  groupCode?: string;
+  schedule?: string;
   studentId: string;
   studentName: string;
-  studentEmail: string;
-  enrollmentStatus: EnrollmentStatus;
+  studentEmail?: string;
+  status: EnrollmentStatus;
   enrolledAt: string;
   createdAt: string;
   updatedAt: string;

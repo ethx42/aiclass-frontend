@@ -30,7 +30,8 @@ import {
   useDeleteClass,
 } from "@/src/lib/hooks/use-classes";
 import { useSubjects } from "@/src/lib/hooks/use-subjects";
-import { UserRole, Semester } from "@/src/types/api";
+import { useEnrollments } from "@/src/lib/hooks/use-enrollments";
+import { UserRole, Semester, ClassResponse } from "@/src/types/api";
 import { TeacherClassView } from "@/src/components/TeacherClassView";
 import { StudentClassView } from "@/src/components/StudentClassView";
 
@@ -39,10 +40,37 @@ export default function ClassDetailPage() {
   const router = useRouter();
   const classId = params.classId as string;
   const user = useAuthStore((state) => state.user);
-  const { data, isLoading, error } = useClass(classId);
+
+  // Teachers fetch class directly, students get it through enrollments
+  const isTeacher = user?.role === UserRole.TEACHER;
+
+  // Only teachers can fetch class directly
+  const shouldFetchClass = isTeacher && !!classId;
+  const {
+    data: classDataTeacher,
+    isLoading: loadingClass,
+    error: classError,
+  } = useClass(shouldFetchClass ? classId : "");
+
+  // Students get ALL their enrollments (backend doesn't allow filtering by classId for students)
+  const shouldFetchEnrollments = !isTeacher && !!user?.id;
+  const {
+    data: enrollmentsData,
+    isLoading: loadingEnrollments,
+    error: enrollmentError,
+  } = useEnrollments({
+    studentId: shouldFetchEnrollments ? user?.id : undefined,
+    page: 0,
+    size: 100, // Get all enrollments to find the one for this class
+  });
+
   const { data: subjectsData, isLoading: loadingSubjects } = useSubjects();
   const updateClass = useUpdateClass();
   const deleteClass = useDeleteClass();
+
+  // Determine loading and error states
+  const isLoading = isTeacher ? loadingClass : loadingEnrollments;
+  const error = isTeacher ? classError : enrollmentError;
 
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -55,7 +83,35 @@ export default function ClassDetailPage() {
     schedule: "",
   });
 
-  const classData = data?.data;
+  // Get class data based on role
+  let classData: ClassResponse | undefined;
+
+  if (isTeacher) {
+    classData = classDataTeacher?.data;
+  } else {
+    // For students, find the enrollment for this specific class
+    const enrollments = enrollmentsData?.data?.content || [];
+    const enrollment = enrollments.find((e) => e.classId === classId);
+
+    if (enrollment) {
+      classData = {
+        id: enrollment.classId,
+        subjectId: enrollment.subjectId || "",
+        subjectCode: enrollment.subjectCode || "N/A",
+        subjectName: enrollment.subjectName || enrollment.className,
+        teacherId: enrollment.teacherId || "",
+        teacherName: enrollment.teacherName || "",
+        year: enrollment.year || new Date().getFullYear(),
+        semester: enrollment.semester || Semester.FALL,
+        groupCode: enrollment.groupCode || "",
+        schedule: enrollment.schedule,
+        metadata: undefined,
+        createdAt: enrollment.createdAt,
+        updatedAt: enrollment.updatedAt,
+      };
+    }
+  }
+
   const subjects = subjectsData?.data?.content || [];
 
   const handleEditClick = () => {
@@ -104,21 +160,36 @@ export default function ClassDetailPage() {
     );
   }
 
-  if (error || !data?.data) {
+  if (error) {
     return (
       <Box p="6">
         <Callout.Root color="red">
           <Callout.Icon>
             <InfoCircledIcon />
           </Callout.Icon>
-          <Callout.Text>Failed to load class. Please try again.</Callout.Text>
+          <Callout.Text>
+            {isTeacher
+              ? "Failed to load class. Please try again."
+              : "Failed to load class. You may not be enrolled in this class."}
+          </Callout.Text>
         </Callout.Root>
       </Box>
     );
   }
 
   if (!classData) {
-    return null;
+    return (
+      <Box p="6">
+        <Callout.Root color="red">
+          <Callout.Icon>
+            <InfoCircledIcon />
+          </Callout.Icon>
+          <Callout.Text>
+            Class not found or you don&apos;t have access to view it.
+          </Callout.Text>
+        </Callout.Root>
+      </Box>
+    );
   }
 
   return (
