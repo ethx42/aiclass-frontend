@@ -268,10 +268,13 @@ export default function SubjectsPage() {
               <TextField.Root
                 placeholder={t("subjects.subjectCodePlaceholder")}
                 value={createFormData.code}
-                onChange={(e) =>
-                  setCreateFormData({ ...createFormData, code: e.target.value })
-                }
+                onChange={(e) => {
+                  // Convert to uppercase and remove spaces
+                  const value = e.target.value.toUpperCase().replace(/\s/g, "");
+                  setCreateFormData({ ...createFormData, code: value });
+                }}
                 required
+                style={{ textTransform: "uppercase" }}
               />
             </Box>
 
