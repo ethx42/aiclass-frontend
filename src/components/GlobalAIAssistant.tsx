@@ -156,10 +156,9 @@ export function GlobalAIAssistant() {
                             </Text>
                           </Flex>
                           <Text size="2">{recommendation.message}</Text>
-                          {recommendation.classEntity && (
+                          {recommendation.subjectCode && (
                             <Text size="1" color="gray">
-                              {recommendation.classEntity.subject.code} -{' '}
-                              {recommendation.classEntity.subject.name}
+                              {recommendation.subjectCode} - {recommendation.subjectName}
                             </Text>
                           )}
                         </Flex>
