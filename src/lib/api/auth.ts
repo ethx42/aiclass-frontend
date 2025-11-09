@@ -1,6 +1,5 @@
-import { apiClient } from './client';
 import { usersApi } from './users';
-import { ApiResponse, User, UserRole, roleToApiFormat } from '@/src/types/api';
+import { UserRole, roleToApiFormat } from '@/src/types/api';
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
