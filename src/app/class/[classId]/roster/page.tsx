@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
   Box,
@@ -22,6 +22,7 @@ import {
   InfoCircledIcon,
   PlusIcon,
   TrashIcon,
+  MagnifyingGlassIcon,
 } from "@radix-ui/react-icons";
 import { useClass } from "@/src/lib/hooks/use-classes";
 import {
@@ -45,7 +46,11 @@ export default function RosterPage() {
   const classId = params.classId as string;
 
   const { data: classData } = useClass(classId);
-  const { data: enrollmentsData, isLoading } = useEnrollments({
+  const {
+    data: enrollmentsData,
+    isLoading,
+    isFetching,
+  } = useEnrollments({
     classId,
     page: 0,
     size: 100,
@@ -66,8 +71,67 @@ export default function RosterPage() {
   const [isSearching, setIsSearching] = useState(false);
   const [selectedStudents, setSelectedStudents] = useState<User[]>([]);
   const [error, setError] = useState("");
+  const [isStudentSelectOpen, setIsStudentSelectOpen] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const enrollments = enrollmentsData?.data?.content || [];
+
+  // Open select and focus input when dialog opens
+  useEffect(() => {
+    if (isAddDialogOpen) {
+      // Open the select automatically when dialog opens
+      setIsStudentSelectOpen(true);
+      // Focus the input after a short delay to ensure everything is rendered
+      setTimeout(() => {
+        if (searchInputRef.current) {
+          searchInputRef.current.focus();
+        }
+      }, 150);
+    }
+  }, [isAddDialogOpen]);
+
+  // Focus the search input when the select opens
+  useEffect(() => {
+    if (isStudentSelectOpen && searchInputRef.current && isAddDialogOpen) {
+      // Small delay to ensure the Select.Content is rendered
+      setTimeout(() => {
+        searchInputRef.current?.focus();
+      }, 100);
+    }
+  }, [isStudentSelectOpen, isAddDialogOpen]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        isStudentSelectOpen &&
+        dropdownRef.current &&
+        searchInputRef.current &&
+        !dropdownRef.current.contains(event.target as Node) &&
+        !searchInputRef.current.contains(event.target as Node)
+      ) {
+        setIsStudentSelectOpen(false);
+      }
+    };
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && isStudentSelectOpen) {
+        setIsStudentSelectOpen(false);
+        searchInputRef.current?.blur();
+      }
+    };
+
+    if (isStudentSelectOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener("keydown", handleEscape);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, [isStudentSelectOpen]);
 
   // Debug: Log search results changes
   useEffect(() => {
@@ -181,6 +245,7 @@ export default function RosterPage() {
       setSelectedStudents([]);
       setSearchResults([]);
       setError("");
+      setIsStudentSelectOpen(false);
     }
   };
 
@@ -196,12 +261,29 @@ export default function RosterPage() {
     try {
       await deleteEnrollment.mutateAsync(enrollmentToDelete);
       setIsDeleteDialogOpen(false);
-      setEnrollmentToDelete(null);
-      setStudentNameToDelete(null);
+      // Don't clear enrollmentToDelete yet - wait for the list to update
+      // It will be cleared when the enrollment is no longer in the list
     } catch (err) {
       console.error("Failed to remove student:", err);
+      // Only clear on error
+      setEnrollmentToDelete(null);
+      setStudentNameToDelete(null);
     }
   };
+
+  // Clear enrollmentToDelete when it's no longer in the list
+  useEffect(() => {
+    if (enrollmentToDelete && enrollmentsData?.data?.content) {
+      const enrollmentExists = enrollmentsData.data.content.some(
+        (e) => e.id === enrollmentToDelete
+      );
+      if (!enrollmentExists && !isFetching) {
+        // Enrollment has been removed from the list and we're not fetching anymore
+        setEnrollmentToDelete(null);
+        setStudentNameToDelete(null);
+      }
+    }
+  }, [enrollmentToDelete, enrollmentsData?.data?.content, isFetching]);
 
   if (isLoading) {
     return (
@@ -268,93 +350,134 @@ export default function RosterPage() {
                     </Callout.Root>
                   )}
 
+                  {/* Student Selection */}
                   <Box>
                     <Text as="label" size="2" weight="bold" mb="1">
                       {t("roster.searchStudent")}
                     </Text>
-                    <TextField.Root
-                      placeholder={t("roster.typeNameOrEmail")}
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      autoFocus
-                    />
-                    <Flex align="center" gap="2" mt="1">
-                      {isSearching && (
-                        <>
-                          <Spinner size="1" />
-                          <Text size="1" color="gray">
-                            {t("roster.searching")}
-                          </Text>
-                        </>
-                      )}
-                      {searchQuery.length > 0 && searchQuery.length < 2 && (
-                        <Text size="1" color="gray">
-                          {t("roster.typeAtLeast2")}
-                        </Text>
-                      )}
-                      {searchQuery.length >= 2 &&
-                        !isSearching &&
-                        searchResults.length === 0 && (
-                          <Text size="1" color="gray">
-                            {t("roster.noStudentsFound")}
-                          </Text>
-                        )}
-                    </Flex>
-                  </Box>
-
-                  {/* Search Results */}
-                  {searchResults.length > 0 && (
-                    <Box>
-                      <Text size="2" weight="bold" mb="2">
-                        {t("roster.selectStudent")} ({searchResults.length})
-                      </Text>
-                      <Box
-                        style={{
-                          border: "1px solid var(--gray-6)",
-                          borderRadius: "var(--radius-3)",
-                          maxHeight: "200px",
-                          overflow: "auto",
-                        }}
+                    <Box style={{ position: "relative", width: "100%" }}>
+                      {/* Use TextField directly as the input */}
+                      <TextField.Root
+                        ref={searchInputRef}
+                        placeholder={t("roster.typeNameOrEmail")}
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        onFocus={() => setIsStudentSelectOpen(true)}
+                        onClick={() => setIsStudentSelectOpen(true)}
+                        style={{ width: "100%" }}
                       >
-                        {searchResults.map((student) => {
-                          const isSelected = selectedStudents.some(
-                            (s) => s.id === student.id
-                          );
-                          return (
-                            <Box
-                              key={student.id}
-                              onClick={(e) => handleSelectStudent(e, student)}
-                              style={{
-                                padding: "12px",
-                                cursor: "pointer",
-                                borderBottom: "1px solid var(--gray-4)",
-                                backgroundColor: isSelected
-                                  ? "var(--accent-3)"
-                                  : "transparent",
-                              }}
-                              className="hover:bg-gray-2"
-                            >
-                              <Flex justify="between" align="center">
-                                <Box>
-                                  <Text size="2" weight="bold">
-                                    {student.fullName}
-                                  </Text>
-                                  <Text
-                                    size="1"
-                                    color="gray"
-                                    style={{ display: "block" }}
+                        <TextField.Slot>
+                          <MagnifyingGlassIcon />
+                        </TextField.Slot>
+                      </TextField.Root>
+
+                      {/* Results dropdown positioned relative to the TextField */}
+                      {isStudentSelectOpen && (
+                        <Box
+                          ref={dropdownRef}
+                          style={{
+                            position: "absolute",
+                            top: "100%",
+                            left: 0,
+                            right: 0,
+                            width: "100%",
+                            marginTop: "4px",
+                            backgroundColor: "var(--color-background)",
+                            border: "1px solid var(--gray-6)",
+                            borderRadius: "var(--radius-3)",
+                            boxShadow: "var(--shadow-4)",
+                            zIndex: 1000,
+                            display: "flex",
+                            flexDirection: "column",
+                          }}
+                        >
+                          {/* Filtered results - Auto height area */}
+                          <Box
+                            style={{
+                              maxHeight: "400px",
+                              overflowY: "auto",
+                              minHeight: 0,
+                            }}
+                          >
+                            {isSearching ? (
+                              <Box p="3" style={{ textAlign: "center" }}>
+                                <Spinner size="1" />
+                                <Text
+                                  size="2"
+                                  color="gray"
+                                  style={{ display: "block", marginTop: "8px" }}
+                                >
+                                  {t("roster.searching")}
+                                </Text>
+                              </Box>
+                            ) : searchQuery.length > 0 &&
+                              searchQuery.length < 2 ? (
+                              <Box p="3" style={{ textAlign: "center" }}>
+                                <Text size="2" color="gray">
+                                  {t("roster.typeAtLeast2")}
+                                </Text>
+                              </Box>
+                            ) : searchQuery.length >= 2 &&
+                              searchResults.length === 0 ? (
+                              <Box p="3" style={{ textAlign: "center" }}>
+                                <Text size="2" color="gray">
+                                  {t("roster.noStudentsFound")}
+                                </Text>
+                              </Box>
+                            ) : searchResults.length > 0 ? (
+                              searchResults.map((student) => {
+                                const isSelected = selectedStudents.some(
+                                  (s) => s.id === student.id
+                                );
+                                return (
+                                  <Box
+                                    key={student.id}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleSelectStudent(e, student);
+                                    }}
+                                    style={{
+                                      padding: "12px",
+                                      cursor: "pointer",
+                                      borderBottom: "1px solid var(--gray-4)",
+                                      backgroundColor: isSelected
+                                        ? "var(--accent-3)"
+                                        : "transparent",
+                                    }}
+                                    className="hover:bg-gray-2"
                                   >
-                                    {student.email}
-                                  </Text>
-                                </Box>
-                                {isSelected && <Badge color="blue">✓</Badge>}
-                              </Flex>
-                            </Box>
-                          );
-                        })}
-                      </Box>
+                                    <Flex justify="between" align="center">
+                                      <Box>
+                                        <Text size="2" weight="bold">
+                                          {student.fullName}
+                                        </Text>
+                                        <Text
+                                          size="1"
+                                          color="gray"
+                                          style={{ display: "block" }}
+                                        >
+                                          {student.email}
+                                        </Text>
+                                      </Box>
+                                      {isSelected && (
+                                        <Badge color="blue">✓</Badge>
+                                      )}
+                                    </Flex>
+                                  </Box>
+                                );
+                              })
+                            ) : (
+                              <Box p="3" style={{ textAlign: "center" }}>
+                                <Text size="2" color="gray">
+                                  {t("roster.typeAtLeast2")}
+                                </Text>
+                              </Box>
+                            )}
+                          </Box>
+                        </Box>
+                      )}
                     </Box>
-                  )}
+                  </Box>
 
                   {selectedStudents.length > 0 && (
                     <Box>
@@ -516,8 +639,19 @@ export default function RosterPage() {
                               enrollment.studentName
                             )
                           }
+                          disabled={
+                            deleteEnrollment.isPending ||
+                            (enrollmentToDelete === enrollment.id && isFetching)
+                          }
                         >
-                          <TrashIcon />
+                          {(deleteEnrollment.isPending ||
+                            (enrollmentToDelete === enrollment.id &&
+                              isFetching)) &&
+                          enrollmentToDelete === enrollment.id ? (
+                            <Spinner size="1" />
+                          ) : (
+                            <TrashIcon />
+                          )}
                         </Button>
                       </Table.Cell>
                     </Table.Row>
@@ -532,7 +666,16 @@ export default function RosterPage() {
       {/* Delete Confirmation Dialog */}
       <AlertDialog.Root
         open={isDeleteDialogOpen}
-        onOpenChange={setIsDeleteDialogOpen}
+        onOpenChange={(open) => {
+          // Prevent closing the dialog while deletion is in progress or list is updating
+          if (
+            !open &&
+            (deleteEnrollment.isPending || (enrollmentToDelete && isFetching))
+          ) {
+            return;
+          }
+          setIsDeleteDialogOpen(open);
+        }}
       >
         <AlertDialog.Content style={{ maxWidth: 500 }}>
           <AlertDialog.Title>{t("roster.removeStudent")}</AlertDialog.Title>
@@ -574,7 +717,15 @@ export default function RosterPage() {
             justify="end"
           >
             <AlertDialog.Cancel>
-              <Button variant="soft" color="gray" className="w-full sm:w-auto">
+              <Button
+                variant="soft"
+                color="gray"
+                className="w-full sm:w-auto"
+                disabled={
+                  deleteEnrollment.isPending ||
+                  (!!enrollmentToDelete && isFetching)
+                }
+              >
                 {t("common.cancel")}
               </Button>
             </AlertDialog.Cancel>
@@ -582,12 +733,21 @@ export default function RosterPage() {
               <Button
                 color="red"
                 onClick={handleConfirmDelete}
-                disabled={deleteEnrollment.isPending}
+                disabled={
+                  deleteEnrollment.isPending ||
+                  (!!enrollmentToDelete && isFetching)
+                }
                 className="w-full sm:w-auto"
               >
-                {deleteEnrollment.isPending
-                  ? t("roster.removing")
-                  : t("roster.removeStudent")}
+                {deleteEnrollment.isPending ||
+                (enrollmentToDelete && isFetching) ? (
+                  <Flex align="center" gap="2">
+                    <Spinner size="1" />
+                    {t("roster.removing")}
+                  </Flex>
+                ) : (
+                  t("roster.removeStudent")
+                )}
               </Button>
             </AlertDialog.Action>
           </Flex>
