@@ -195,21 +195,30 @@ export default function RosterPage() {
   }
 
   return (
-    <Box p="6">
-      <Box mb="6">
-        <Button variant="ghost" onClick={() => router.back()}>
+    <Box p={{ initial: "4", sm: "6" }}>
+      <Box mb={{ initial: "4", sm: "6" }}>
+        <Button
+          variant="ghost"
+          onClick={() => router.back()}
+          size={{ initial: "2", sm: "3" }}
+        >
           <ArrowLeftIcon /> {t("navigation.backToClass")}
         </Button>
       </Box>
 
-      <Card>
+      <Card size={{ initial: "2", sm: "4" }}>
         <Flex direction="column" gap="4">
-          <Flex justify="between" align="center">
+          <Flex
+            direction={{ initial: "column", sm: "row" }}
+            justify="between"
+            align={{ initial: "start", sm: "center" }}
+            gap={{ initial: "3", sm: "0" }}
+          >
             <Box>
-              <Heading size="6" mb="1">
+              <Heading size={{ initial: "5", sm: "6" }} mb="1">
                 {t("roster.classRoster")}
               </Heading>
-              <Text size="2" color="gray">
+              <Text size={{ initial: "2", sm: "2" }} color="gray">
                 {classData?.data?.subjectCode} - {classData?.data?.subjectName}
               </Text>
             </Box>
@@ -218,7 +227,7 @@ export default function RosterPage() {
               onOpenChange={handleDialogOpenChange}
             >
               <Dialog.Trigger>
-                <Button>
+                <Button size={{ initial: "2", sm: "3" }} className="w-full sm:w-auto">
                   <PlusIcon /> {t("roster.addStudent")}
                 </Button>
               </Dialog.Trigger>
@@ -374,9 +383,18 @@ export default function RosterPage() {
                     </Box>
                   )}
 
-                  <Flex gap="3" justify="end" mt="2">
+                  <Flex
+                    direction={{ initial: "column", sm: "row" }}
+                    gap="3"
+                    justify="end"
+                    mt="2"
+                  >
                     <Dialog.Close>
-                      <Button variant="soft" color="gray">
+                      <Button
+                        variant="soft"
+                        color="gray"
+                        className="w-full sm:w-auto"
+                      >
                         {t("common.cancel")}
                       </Button>
                     </Dialog.Close>
@@ -386,6 +404,7 @@ export default function RosterPage() {
                         createEnrollment.isPending ||
                         selectedStudents.length === 0
                       }
+                      className="w-full sm:w-auto"
                     >
                       {createEnrollment.isPending
                         ? t("roster.adding")
@@ -405,15 +424,22 @@ export default function RosterPage() {
               align="center"
               justify="center"
               gap="3"
-              style={{ padding: "40px" }}
+              className="p-6 sm:p-10"
             >
-              <Text color="gray">{t("roster.noStudentsEnrolled")}</Text>
-              <Button variant="soft" onClick={() => setIsAddDialogOpen(true)}>
+              <Text color="gray" size={{ initial: "2", sm: "3" }}>
+                {t("roster.noStudentsEnrolled")}
+              </Text>
+              <Button
+                variant="soft"
+                onClick={() => setIsAddDialogOpen(true)}
+                size={{ initial: "2", sm: "3" }}
+              >
                 <PlusIcon /> {t("roster.addFirstStudent")}
               </Button>
             </Flex>
           ) : (
-            <Table.Root>
+            <Box style={{ overflowX: "auto" }}>
+              <Table.Root>
               <Table.Header>
                 <Table.Row>
                   <Table.ColumnHeaderCell>
@@ -471,6 +497,7 @@ export default function RosterPage() {
                 ))}
               </Table.Body>
             </Table.Root>
+            </Box>
           )}
         </Flex>
       </Card>

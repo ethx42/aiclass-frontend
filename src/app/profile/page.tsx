@@ -96,8 +96,8 @@ export default function ProfilePage() {
   }
 
   return (
-    <Box p="6">
-      <Box mb="6">
+    <Box p={{ initial: "4", sm: "6" }}>
+      <Box mb={{ initial: "4", sm: "6" }}>
         <Button variant="ghost" onClick={() => router.push("/dashboard")}>
           <ArrowLeftIcon /> {t("navigation.backToDashboard")}
         </Button>
@@ -105,8 +105,12 @@ export default function ProfilePage() {
 
       <Box style={{ maxWidth: "900px", margin: "0 auto" }}>
         {/* Header with Avatar */}
-        <Card size="4" mb="4">
-          <Flex align="center" gap="4">
+        <Card size={{ initial: "2", sm: "4" }} mb="4">
+          <Flex
+            direction={{ initial: "column", sm: "row" }}
+            align={{ initial: "center", sm: "center" }}
+            gap="4"
+          >
             {/* Avatar with Initials */}
             <Box
               style={{
@@ -120,25 +124,42 @@ export default function ProfilePage() {
                 fontSize: "32px",
                 fontWeight: "bold",
                 color: "white",
+                flexShrink: 0,
               }}
             >
               {user.fullName?.charAt(0).toUpperCase() || "U"}
             </Box>
-            <Flex direction="column" gap="2" style={{ flex: 1 }}>
-              <Flex align="center" gap="3">
-                <Heading size="7">{user.fullName}</Heading>
+            <Flex
+              direction="column"
+              align="center"
+              gap="2"
+              style={{ flex: 1, width: "100%" }}
+            >
+              <Flex
+                direction={{ initial: "column", sm: "row" }}
+                align={{ initial: "center", sm: "center" }}
+                gap="3"
+                wrap="wrap"
+              >
+                <Heading size={{ initial: "5", sm: "7" }}>
+                  {user.fullName}
+                </Heading>
                 <Badge color="blue" size="2">
                   {user.role === UserRole.TEACHER
                     ? t("auth.teacher")
                     : t("auth.student")}
                 </Badge>
               </Flex>
-              <Text size="3" color="gray">
+              <Text size={{ initial: "2", sm: "3" }} color="gray">
                 {user.email}
               </Text>
             </Flex>
             {!isEditing && (
-              <Button onClick={() => setIsEditing(true)} size="3">
+              <Button
+                onClick={() => setIsEditing(true)}
+                size={{ initial: "2", sm: "3" }}
+                className="w-full sm:w-auto"
+              >
                 {t("profile.editProfile")}
               </Button>
             )}
@@ -146,9 +167,9 @@ export default function ProfilePage() {
         </Card>
 
         {/* Basic Information Card */}
-        <Card size="4" mb="4">
+        <Card size={{ initial: "2", sm: "4" }} mb="4">
           <Flex direction="column" gap="4">
-            <Heading size="5" mb="2">
+            <Heading size={{ initial: "4", sm: "5" }} mb="2">
               {t("profile.profile")}
             </Heading>
 
@@ -201,9 +222,9 @@ export default function ProfilePage() {
 
         {/* Teacher Professional Information Card */}
         {user.role === UserRole.TEACHER && (
-          <Card size="4" mb="4">
+          <Card size={{ initial: "2", sm: "4" }} mb="4">
             <Flex direction="column" gap="4">
-              <Heading size="5" mb="2">
+              <Heading size={{ initial: "4", sm: "5" }} mb="2">
                 {t("profile.professionalInfo")}
               </Heading>
 
@@ -294,13 +315,19 @@ export default function ProfilePage() {
         )}
 
         {/* Account Details Card */}
-        <Card size="4" mb="4">
+        <Card size={{ initial: "2", sm: "4" }} mb="4">
           <Flex direction="column" gap="4">
-            <Heading size="5" mb="2">
+            <Heading size={{ initial: "4", sm: "5" }} mb="2">
               {t("profile.accountDetails")}
             </Heading>
             <Flex direction="column" gap="3">
-              <Flex justify="between" align="center" p="3">
+              <Flex
+                direction={{ initial: "column", sm: "row" }}
+                justify={{ initial: "start", sm: "between" }}
+                align={{ initial: "start", sm: "center" }}
+                gap={{ initial: "1", sm: "0" }}
+                p="3"
+              >
                 <Text size="2" weight="medium" color="gray">
                   {t("profile.accountCreated")}
                 </Text>
@@ -308,7 +335,13 @@ export default function ProfilePage() {
                   {new Date(user.createdAt).toLocaleDateString()}
                 </Text>
               </Flex>
-              <Flex justify="between" align="center" p="3">
+              <Flex
+                direction={{ initial: "column", sm: "row" }}
+                justify={{ initial: "start", sm: "between" }}
+                align={{ initial: "start", sm: "center" }}
+                gap={{ initial: "1", sm: "0" }}
+                p="3"
+              >
                 <Text size="2" weight="medium" color="gray">
                   {t("profile.lastUpdated")}
                 </Text>
@@ -322,17 +355,27 @@ export default function ProfilePage() {
 
         {/* Action Buttons */}
         {isEditing && (
-          <Flex gap="3" justify="end">
+          <Flex
+            direction={{ initial: "column", sm: "row" }}
+            gap="3"
+            justify="end"
+          >
             <Button
               variant="soft"
               color="gray"
-              size="3"
+              size={{ initial: "2", sm: "3" }}
               onClick={handleCancel}
               disabled={isSaving}
+              className="w-full sm:w-auto"
             >
               {t("common.cancel")}
             </Button>
-            <Button size="3" onClick={handleSave} disabled={isSaving}>
+            <Button
+              size={{ initial: "2", sm: "3" }}
+              onClick={handleSave}
+              disabled={isSaving}
+              className="w-full sm:w-auto"
+            >
               {isSaving ? t("class.saving") : t("profile.saveChanges")}
             </Button>
           </Flex>

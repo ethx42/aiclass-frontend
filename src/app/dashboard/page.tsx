@@ -26,24 +26,53 @@ export default function DashboardPage() {
           background: "var(--color-background)",
         }}
       >
-        <Flex justify="between" align="center" px="6" py="4">
-          <Heading size="6">AIClass</Heading>
-          <Flex gap="3" align="center">
-            <Box style={{ textAlign: "right" }}>
-              <Heading size="3">{user?.fullName}</Heading>
+        <Flex
+          direction={{ initial: "column", sm: "row" }}
+          justify="between"
+          align={{ initial: "start", sm: "center" }}
+          gap={{ initial: "3", sm: "0" }}
+          px={{ initial: "4", sm: "6" }}
+          py={{ initial: "3", sm: "4" }}
+        >
+          <Heading size={{ initial: "5", sm: "6" }}>AIClass</Heading>
+          <Flex
+            direction={{ initial: "column", sm: "row" }}
+            gap={{ initial: "2", sm: "3" }}
+            align={{ initial: "start", sm: "center" }}
+            className="w-full sm:w-auto"
+          >
+            <Box className="w-full sm:w-auto text-left sm:text-right">
+              <Heading size={{ initial: "2", sm: "3" }}>{user?.fullName}</Heading>
               <Box style={{ fontSize: "12px", color: "var(--gray-11)" }}>
                 {user?.role === UserRole.TEACHER
                   ? t("auth.teacher")
                   : t("auth.student")}
               </Box>
             </Box>
-            <Button variant="soft" onClick={() => router.push("/profile")}>
-              <PersonIcon /> {t("navigation.profile")}
-            </Button>
-            <Button variant="soft" color="red" onClick={logout}>
-              <ExitIcon /> {t("auth.logout")}
-            </Button>
-            <LanguageSelector />
+            <Flex
+              direction={{ initial: "column", sm: "row" }}
+              gap="2"
+              className="w-full sm:w-auto"
+            >
+              <Button
+                variant="soft"
+                onClick={() => router.push("/profile")}
+                size={{ initial: "2", sm: "3" }}
+                className="w-full sm:w-auto"
+              >
+                <PersonIcon /> {t("navigation.profile")}
+              </Button>
+              <Button
+                variant="soft"
+                color="red"
+                onClick={logout}
+                size={{ initial: "2", sm: "3" }}
+                className="w-full sm:w-auto"
+              >
+                <ExitIcon /> {t("auth.logout")}
+              </Button>
+              <LanguageSelector />
+            </Flex>
           </Flex>
         </Flex>
       </Box>

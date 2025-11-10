@@ -42,22 +42,40 @@ export function TeacherDashboard() {
   const classes = data?.data?.content || [];
 
   return (
-    <Box p="6">
-      <Flex direction="column" gap="6">
-        <Flex justify="between" align="center">
+    <Box p={{ initial: "4", sm: "6" }}>
+      <Flex direction="column" gap={{ initial: "4", sm: "6" }}>
+        <Flex
+          direction={{ initial: "column", sm: "row" }}
+          justify="between"
+          align={{ initial: "start", sm: "center" }}
+          gap={{ initial: "3", sm: "0" }}
+        >
           <Box>
-            <Heading size="8" mb="2">
+            <Heading size={{ initial: "6", sm: "8" }} mb="2">
               {t('dashboard.myClasses')}
             </Heading>
-            <Text size="3" color="gray">
+            <Text size={{ initial: "2", sm: "3" }} color="gray">
               {t('dashboard.manageClasses')}
             </Text>
           </Box>
-          <Flex gap="3">
-            <Button size="3" variant="soft" onClick={() => router.push('/subjects')}>
+          <Flex
+            direction={{ initial: "column", sm: "row" }}
+            gap={{ initial: "2", sm: "3" }}
+            className="w-full sm:w-auto"
+          >
+            <Button
+              size={{ initial: "2", sm: "3" }}
+              variant="soft"
+              onClick={() => router.push('/subjects')}
+              className="w-full sm:w-auto"
+            >
               {t('dashboard.manageSubjects')}
             </Button>
-            <Button size="3" onClick={handleCreateClass}>
+            <Button
+              size={{ initial: "2", sm: "3" }}
+              onClick={handleCreateClass}
+              className="w-full sm:w-auto"
+            >
               <PlusIcon /> {t('dashboard.createClass')}
             </Button>
           </Flex>
@@ -73,13 +91,13 @@ export function TeacherDashboard() {
               minHeight: '300px',
               border: '2px dashed var(--gray-6)',
               borderRadius: 'var(--radius-3)',
-              padding: '40px',
             }}
+            className="p-6 sm:p-10"
           >
-            <Text size="4" color="gray">
+            <Text size={{ initial: "3", sm: "4" }} color="gray">
               {t('dashboard.noClassesYet')}
             </Text>
-            <Button size="2" variant="soft" onClick={handleCreateClass}>
+            <Button size={{ initial: "2", sm: "2" }} variant="soft" onClick={handleCreateClass}>
               <PlusIcon /> {t('dashboard.createFirstClass')}
             </Button>
           </Flex>

@@ -63,17 +63,23 @@ export default function CreateClassPage() {
   const subjects = subjectsData?.data?.content || [];
 
   return (
-    <Box p="6">
-      <Box mb="6">
-        <Button variant="ghost" onClick={() => router.back()}>
+    <Box p={{ initial: "4", sm: "6" }}>
+      <Box mb={{ initial: "4", sm: "6" }}>
+        <Button
+          variant="ghost"
+          onClick={() => router.back()}
+          size={{ initial: "2", sm: "3" }}
+        >
           <ArrowLeftIcon /> {t("common.back")}
         </Button>
       </Box>
 
       <Box style={{ maxWidth: "600px", margin: "0 auto" }}>
-        <Card size="4">
+        <Card size={{ initial: "2", sm: "4" }}>
           <Flex direction="column" gap="4">
-            <Heading size="6">{t("class.createNewClass")}</Heading>
+            <Heading size={{ initial: "5", sm: "6" }}>
+              {t("class.createNewClass")}
+            </Heading>
 
             {error && (
               <Callout.Root color="red">
@@ -197,19 +203,23 @@ export default function CreateClassPage() {
                   />
                 </Box>
 
-                <Flex gap="3" mt="2">
+                <Flex
+                  direction={{ initial: "column", sm: "row" }}
+                  gap="3"
+                  mt="2"
+                >
                   <Button
                     type="button"
                     variant="soft"
                     color="gray"
-                    style={{ flex: 1 }}
+                    className="w-full sm:flex-1"
                     onClick={() => router.back()}
                   >
                     {t("common.cancel")}
                   </Button>
                   <Button
                     type="submit"
-                    style={{ flex: 1 }}
+                    className="w-full sm:flex-1"
                     disabled={createClass.isPending}
                   >
                     {createClass.isPending

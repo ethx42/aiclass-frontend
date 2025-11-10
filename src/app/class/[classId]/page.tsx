@@ -164,7 +164,7 @@ export default function ClassDetailPage() {
 
   if (error) {
     return (
-      <Box p="6">
+      <Box p={{ initial: "4", sm: "6" }}>
         <Callout.Root color="red">
           <Callout.Icon>
             <InfoCircledIcon />
@@ -181,7 +181,7 @@ export default function ClassDetailPage() {
 
   if (!classData) {
     return (
-      <Box p="6">
+      <Box p={{ initial: "4", sm: "6" }}>
         <Callout.Root color="red">
           <Callout.Icon>
             <InfoCircledIcon />
@@ -201,35 +201,43 @@ export default function ClassDetailPage() {
           background: "var(--color-background)",
         }}
       >
-        <Flex direction="column" gap="3" px="6" py="4">
+        <Flex direction="column" gap="3" px={{ initial: "4", sm: "6" }} py={{ initial: "3", sm: "4" }}>
           <Button
             variant="ghost"
             style={{ width: "fit-content" }}
             onClick={() => router.push("/dashboard")}
+            size={{ initial: "2", sm: "3" }}
           >
             <ArrowLeftIcon /> {t("navigation.backToDashboard")}
           </Button>
 
-          <Flex justify="between" align="center">
+          <Flex
+            direction={{ initial: "column", sm: "row" }}
+            justify="between"
+            align={{ initial: "start", sm: "center" }}
+            gap={{ initial: "3", sm: "0" }}
+          >
             <Box>
-              <Heading size="7" mb="1">
+              <Heading size={{ initial: "5", sm: "7" }} mb="1">
                 {classData.subjectCode} - {classData.subjectName}
               </Heading>
               <Flex
-                gap="2"
+                direction={{ initial: "column", sm: "row" }}
+                gap={{ initial: "1", sm: "2" }}
+                wrap="wrap"
                 style={{ fontSize: "14px", color: "var(--gray-11)" }}
               >
                 <span>
                   {t(`class.${classData.semester?.toLowerCase() || "fall"}`)}{" "}
                   {classData.year}
                 </span>
-                <span>•</span>
+                <span className="hidden sm:inline">•</span>
                 <span>
                   {t("class.group")} {classData.groupCode}
                 </span>
                 {classData.schedule && (
                   <>
-                    <span>•</span>
+                    <span className="hidden sm:inline">•</span>
                     <span>{classData.schedule}</span>
                   </>
                 )}
@@ -237,16 +245,22 @@ export default function ClassDetailPage() {
             </Box>
 
             {user?.role === UserRole.TEACHER && (
-              <Flex gap="2">
+              <Flex
+                direction={{ initial: "column", sm: "row" }}
+                gap={{ initial: "2", sm: "2" }}
+                className="w-full sm:w-auto"
+              >
                 <Button
                   variant="soft"
                   onClick={() => router.push(`/class/${classId}/roster`)}
+                  size={{ initial: "2", sm: "3" }}
+                  className="w-full sm:w-auto"
                 >
                   {t("class.manageRoster")}
                 </Button>
                 <DropdownMenu.Root>
                   <DropdownMenu.Trigger>
-                    <Button variant="soft" color="gray">
+                    <Button variant="soft" color="gray" size={{ initial: "2", sm: "3" }}>
                       <DotsVerticalIcon />
                     </Button>
                   </DropdownMenu.Trigger>
@@ -402,9 +416,18 @@ export default function ClassDetailPage() {
               />
             </Box>
 
-            <Flex gap="3" justify="end" mt="2">
+            <Flex
+              direction={{ initial: "column", sm: "row" }}
+              gap="3"
+              justify="end"
+              mt="2"
+            >
               <Dialog.Close>
-                <Button variant="soft" color="gray">
+                <Button
+                  variant="soft"
+                  color="gray"
+                  className="w-full sm:w-auto"
+                >
                   {t("common.cancel")}
                 </Button>
               </Dialog.Close>
@@ -416,6 +439,7 @@ export default function ClassDetailPage() {
                   !formData.groupCode ||
                   !formData.year
                 }
+                className="w-full sm:w-auto"
               >
                 {updateClass.isPending
                   ? t("class.saving")
@@ -437,9 +461,14 @@ export default function ClassDetailPage() {
             {t("class.deleteConfirm")}
           </AlertDialog.Description>
 
-          <Flex gap="3" mt="4" justify="end">
+          <Flex
+            direction={{ initial: "column", sm: "row" }}
+            gap="3"
+            mt="4"
+            justify="end"
+          >
             <AlertDialog.Cancel>
-              <Button variant="soft" color="gray">
+              <Button variant="soft" color="gray" className="w-full sm:w-auto">
                 {t("common.cancel")}
               </Button>
             </AlertDialog.Cancel>
@@ -448,6 +477,7 @@ export default function ClassDetailPage() {
                 color="red"
                 onClick={handleDelete}
                 disabled={deleteClass.isPending}
+                className="w-full sm:w-auto"
               >
                 {deleteClass.isPending
                   ? t("class.deleting")

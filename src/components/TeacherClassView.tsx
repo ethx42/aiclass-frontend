@@ -220,16 +220,21 @@ export function TeacherClassView({ classId }: TeacherClassViewProps) {
   }
 
   return (
-    <Box p="6">
-      <Card>
+    <Box p={{ initial: "4", sm: "6" }}>
+      <Card size={{ initial: "2", sm: "4" }}>
         <Flex direction="column" gap="4">
-          <Flex justify="between" align="center">
+          <Flex
+            direction={{ initial: "column", sm: "row" }}
+            justify="between"
+            align={{ initial: "start", sm: "center" }}
+            gap={{ initial: "3", sm: "0" }}
+          >
             <Box>
-              <Text size="5" weight="bold">
+              <Text size={{ initial: "4", sm: "5" }} weight="bold">
                 {t("grades.gradebook")}
               </Text>
               <br />
-              <Text size="2" color="gray">
+              <Text size={{ initial: "2", sm: "2" }} color="gray">
                 {enrollments.length} {t("grades.studentsEnrolled")} ·{" "}
               </Text>
             </Box>
@@ -238,7 +243,7 @@ export function TeacherClassView({ classId }: TeacherClassViewProps) {
               onOpenChange={setIsAddAssessmentDialogOpen}
             >
               <Dialog.Trigger>
-                <Button>
+                <Button size={{ initial: "2", sm: "3" }} className="w-full sm:w-auto">
                   <PlusIcon /> {t("grades.addGrade")}
                 </Button>
               </Dialog.Trigger>
@@ -333,9 +338,18 @@ export function TeacherClassView({ classId }: TeacherClassViewProps) {
                     </Callout.Text>
                   </Callout.Root>
 
-                  <Flex gap="3" justify="end" mt="2">
+                  <Flex
+                    direction={{ initial: "column", sm: "row" }}
+                    gap="3"
+                    justify="end"
+                    mt="2"
+                  >
                     <Dialog.Close>
-                      <Button variant="soft" color="gray">
+                      <Button
+                        variant="soft"
+                        color="gray"
+                        className="w-full sm:w-auto"
+                      >
                         {t("common.cancel")}
                       </Button>
                     </Dialog.Close>
@@ -345,6 +359,7 @@ export function TeacherClassView({ classId }: TeacherClassViewProps) {
                         createGrade.isPending ||
                         !assessmentFormData.assessmentName.trim()
                       }
+                      className="w-full sm:w-auto"
                     >
                       {createGrade.isPending
                         ? t("class.creating")
@@ -357,7 +372,12 @@ export function TeacherClassView({ classId }: TeacherClassViewProps) {
           </Flex>
 
           {enrollments.length === 0 ? (
-            <Text color="gray" style={{ textAlign: "center", padding: "40px" }}>
+            <Text
+              color="gray"
+              size={{ initial: "2", sm: "3" }}
+              style={{ textAlign: "center" }}
+              className="p-6 sm:p-10"
+            >
               {t("roster.noStudentsEnrolled")}
             </Text>
           ) : grades.length === 0 ? (
@@ -366,12 +386,15 @@ export function TeacherClassView({ classId }: TeacherClassViewProps) {
               align="center"
               justify="center"
               gap="3"
-              style={{ padding: "40px" }}
+              className="p-6 sm:p-10"
             >
-              <Text color="gray">{t("grades.noGrades")}</Text>
+              <Text color="gray" size={{ initial: "2", sm: "3" }}>
+                {t("grades.noGrades")}
+              </Text>
               <Button
                 variant="soft"
                 onClick={() => setIsAddAssessmentDialogOpen(true)}
+                size={{ initial: "2", sm: "3" }}
               >
                 <PlusIcon /> {t("grades.addFirstGrade")}
               </Button>

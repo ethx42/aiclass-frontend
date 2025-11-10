@@ -67,7 +67,7 @@ export function StudentClassView({ classId }: StudentClassViewProps) {
 
   if (error) {
     return (
-      <Box p="6">
+      <Box p={{ initial: "4", sm: "6" }}>
         <Callout.Root color="red">
           <Callout.Icon>
             <InfoCircledIcon />
@@ -101,32 +101,32 @@ export function StudentClassView({ classId }: StudentClassViewProps) {
   }, {} as Record<AssessmentKind, typeof grades>);
 
   return (
-    <Box p="6">
-      <Flex direction="column" gap="6">
+    <Box p={{ initial: "4", sm: "6" }}>
+      <Flex direction="column" gap={{ initial: "4", sm: "6" }}>
         {/* Summary Card */}
-        <Card>
+        <Card size={{ initial: "2", sm: "4" }}>
           <Flex direction="column" gap="3">
-            <Text size="5" weight="bold">
+            <Text size={{ initial: "4", sm: "5" }} weight="bold">
               {t("grades.performanceSummary")}
             </Text>
-            <Flex gap="6" wrap="wrap">
+            <Flex gap={{ initial: "4", sm: "6" }} wrap="wrap">
               <Box>
-                <Text size="2" color="gray" mb="1">
+                <Text size={{ initial: "2", sm: "2" }} color="gray" mb="1">
                   {t("grades.totalGrades")}&nbsp;
                 </Text>
-                <Text size="6" weight="bold">
+                <Text size={{ initial: "5", sm: "6" }} weight="bold">
                   {grades.length}
                 </Text>
               </Box>
               {overallAverage && (
                 <Box>
-                  <Text size="2" color="gray" mb="1">
+                  <Text size={{ initial: "2", sm: "2" }} color="gray" mb="1">
                     {t("grades.overallAverage")}&nbsp;
                   </Text>
                   <Badge
-                    size="3"
+                    size={{ initial: "2", sm: "3" }}
                     color={getGradeColor(parseFloat(overallAverage))}
-                    style={{ fontSize: "20px", padding: "8px 16px" }}
+                    className="text-base sm:text-xl px-3 py-1.5 sm:px-4 sm:py-2"
                   >
                     {overallAverage}%
                   </Badge>
@@ -137,9 +137,9 @@ export function StudentClassView({ classId }: StudentClassViewProps) {
         </Card>
 
         {/* Grades Table */}
-        <Card>
+        <Card size={{ initial: "2", sm: "4" }}>
           <Flex direction="column" gap="4">
-            <Text size="5" weight="bold">
+            <Text size={{ initial: "4", sm: "5" }} weight="bold">
               {t("grades.myGrades")}
             </Text>
 
@@ -149,10 +149,12 @@ export function StudentClassView({ classId }: StudentClassViewProps) {
                 align="center"
                 justify="center"
                 gap="3"
-                style={{ padding: "40px" }}
+                className="p-6 sm:p-10"
               >
-                <Text color="gray">{t("grades.noGradesRecorded")}</Text>
-                <Text size="2" color="gray">
+                <Text color="gray" size={{ initial: "2", sm: "3" }}>
+                  {t("grades.noGradesRecorded")}
+                </Text>
+                <Text size={{ initial: "2", sm: "2" }} color="gray">
                   {t("grades.gradesWillAppear")}
                 </Text>
               </Flex>
@@ -234,13 +236,13 @@ export function StudentClassView({ classId }: StudentClassViewProps) {
 
         {/* Breakdown by Assessment Type */}
         {Object.keys(gradesByType).length > 0 && (
-          <Card>
+          <Card size={{ initial: "2", sm: "4" }}>
             <Flex direction="column" gap="4">
-              <Text size="5" weight="bold">
+              <Text size={{ initial: "4", sm: "5" }} weight="bold">
                 {t("grades.breakdownByType")}
               </Text>
 
-              <Flex gap="4" wrap="wrap">
+              <Flex gap={{ initial: "3", sm: "4" }} wrap="wrap">
                 {Object.entries(gradesByType).map(([type, typeGrades]) => {
                   const avg = (
                     typeGrades.reduce(
@@ -250,20 +252,25 @@ export function StudentClassView({ classId }: StudentClassViewProps) {
                   ).toFixed(1);
 
                   return (
-                    <Card key={type} style={{ minWidth: "150px" }}>
+                    <Card
+                      key={type}
+                      size={{ initial: "1", sm: "2" }}
+                      className="min-w-[120px] sm:min-w-[150px]"
+                    >
                       <Flex direction="column" gap="2">
                         <Badge
                           color={getAssessmentColor(type as AssessmentKind)}
+                          size={{ initial: "1", sm: "2" }}
                         >
                           {t(`grades.${type.toLowerCase()}`)}
                         </Badge>
-                        <Text size="2" color="gray">
+                        <Text size={{ initial: "2", sm: "2" }} color="gray">
                           {typeGrades.length}{" "}
                           {typeGrades.length !== 1
                             ? t("grades.grades")
                             : t("grades.grade")}
                         </Text>
-                        <Text size="5" weight="bold">
+                        <Text size={{ initial: "4", sm: "5" }} weight="bold">
                           {avg}%
                         </Text>
                       </Flex>

@@ -42,13 +42,13 @@ export function StudentDashboard() {
   const enrollments = data?.data?.content || [];
 
   return (
-    <Box p="6">
-      <Flex direction="column" gap="6">
+    <Box p={{ initial: "4", sm: "6" }}>
+      <Flex direction="column" gap={{ initial: "4", sm: "6" }}>
         <Box>
-          <Heading size="8" mb="2">
+          <Heading size={{ initial: "6", sm: "8" }} mb="2">
             {t('dashboard.myClasses')}
           </Heading>
-          <Text size="3" color="gray">
+          <Text size={{ initial: "2", sm: "3" }} color="gray">
             {t('dashboard.viewClasses')}
           </Text>
         </Box>
@@ -63,13 +63,13 @@ export function StudentDashboard() {
               minHeight: '300px',
               border: '2px dashed var(--gray-6)',
               borderRadius: 'var(--radius-3)',
-              padding: '40px',
             }}
+            className="p-6 sm:p-10"
           >
-            <Text size="4" color="gray">
+            <Text size={{ initial: "3", sm: "4" }} color="gray">
               {t('dashboard.notEnrolled')}
             </Text>
-            <Text size="2" color="gray">
+            <Text size={{ initial: "2", sm: "2" }} color="gray">
               {t('dashboard.contactTeacher')}
             </Text>
           </Flex>
