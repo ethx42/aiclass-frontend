@@ -42,7 +42,9 @@ export default function DashboardPage() {
             className="w-full sm:w-auto"
           >
             <Box className="w-full sm:w-auto text-left sm:text-right">
-              <Heading size={{ initial: "2", sm: "3" }}>{user?.fullName}</Heading>
+              <Heading size={{ initial: "2", sm: "3" }}>
+                {user?.fullName}
+              </Heading>
               <Box style={{ fontSize: "12px", color: "var(--gray-11)" }}>
                 {user?.role === UserRole.TEACHER
                   ? t("auth.teacher")
@@ -50,15 +52,18 @@ export default function DashboardPage() {
               </Box>
             </Box>
             <Flex
-              direction={{ initial: "column", sm: "row" }}
+              direction="row"
               gap="2"
-              className="w-full sm:w-auto"
+              wrap="nowrap"
+              justify={{ sm: "end" }}
+              className="w-full sm:w-auto sm:ml-auto dashboard-buttons-container"
             >
               <Button
                 variant="soft"
                 onClick={() => router.push("/profile")}
                 size={{ initial: "2", sm: "3" }}
-                className="w-full sm:w-auto"
+                className="flex-1 min-w-0 sm:flex-none sm:w-auto"
+                style={{ whiteSpace: "nowrap" }}
               >
                 <PersonIcon /> {t("navigation.profile")}
               </Button>
@@ -67,11 +72,18 @@ export default function DashboardPage() {
                 color="red"
                 onClick={logout}
                 size={{ initial: "2", sm: "3" }}
-                className="w-full sm:w-auto"
+                className="flex-1 min-w-0 sm:flex-none sm:w-auto"
+                style={{
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                }}
               >
                 <ExitIcon /> {t("auth.logout")}
               </Button>
-              <LanguageSelector />
+              <Box className="flex-1 min-w-0 sm:flex-none">
+                <LanguageSelector />
+              </Box>
             </Flex>
           </Flex>
         </Flex>

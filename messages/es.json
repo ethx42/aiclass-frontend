@@ -187,5 +187,10 @@
     "accountDetails": "Detalles de la Cuenta",
     "accountCreated": "Cuenta Creada",
     "lastUpdated": "Última Actualización"
+  },
+  "language": {
+    "english": "English",
+    "spanish": "Español",
+    "selectLanguage": "Seleccionar Idioma"
   }
 }

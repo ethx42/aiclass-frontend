@@ -46,3 +46,26 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--gray-9);
 }
+
+/* Language Selector - Force hide desktop content on mobile */
+.language-selector-desktop {
+  display: none !important;
+}
+
+@media (min-width: 640px) {
+  .language-selector-desktop {
+    display: block !important;
+  }
+  
+  .language-selector-mobile {
+    display: none !important;
+  }
+  
+  .dashboard-buttons-container {
+    width: auto !important;
+  }
+}
+
+.dashboard-buttons-container {
+  width: 100%;
+}

@@ -1,6 +1,6 @@
 "use client";
 
-import { DropdownMenu, Button, Flex, Text } from "@radix-ui/themes";
+import { DropdownMenu, Button, Flex, Text, Box } from "@radix-ui/themes";
 import { GlobeIcon } from "@radix-ui/react-icons";
 import { useTranslations } from "@/src/lib/i18n/provider";
 
@@ -8,21 +8,62 @@ export function LanguageSelector() {
   const { locale, setLocale } = useTranslations();
 
   const languages = [
-    { code: 'en' as const, name: 'English', flag: '🇺🇸' },
-    { code: 'es' as const, name: 'Español', flag: '🇪🇸' },
+    { code: "en" as const, name: "English", flag: "🇺🇸", displayCode: "ENG" },
+    { code: "es" as const, name: "Español", flag: "🇪🇸", displayCode: "ES" },
   ];
 
-  const currentLanguage = languages.find((lang) => lang.code === locale) || languages[0];
+  const currentLanguage =
+    languages.find((lang) => lang.code === locale) || languages[0];
 
   return (
     <DropdownMenu.Root>
       <DropdownMenu.Trigger>
-        <Button variant="soft" color="gray" size="2">
-          <GlobeIcon />
-          <Flex align="center" gap="1">
-            <Text>{currentLanguage.code.toUpperCase()}</Text>
-          </Flex>
-        </Button>
+        <Box className="group w-full sm:w-auto">
+          <Button
+            variant="soft"
+            color="gray"
+            size={{ initial: "2", sm: "3" }}
+            className="w-full sm:w-auto"
+          >
+            {/* Mobile: Icon + Text side by side */}
+            <Box
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "4px",
+              }}
+              className="language-selector-mobile"
+            >
+              <GlobeIcon />
+              <Text>{currentLanguage.displayCode}</Text>
+            </Box>
+
+            {/* Desktop: Icon OR Text on hover (replacement) */}
+            <Box
+              className="language-selector-desktop relative"
+              style={{
+                minWidth: "32px",
+                minHeight: "20px",
+              }}
+            >
+              <Box
+                className="absolute inset-0 flex items-center justify-center group-hover:opacity-0 transition-opacity"
+                style={{ display: "flex" }}
+              >
+                <GlobeIcon />
+              </Box>
+              <Box
+                className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                style={{ display: "flex" }}
+              >
+                <Text style={{ whiteSpace: "nowrap" }}>
+                  {currentLanguage.displayCode}
+                </Text>
+              </Box>
+            </Box>
+          </Button>
+        </Box>
       </DropdownMenu.Trigger>
       <DropdownMenu.Content>
         {languages.map((lang) => (
@@ -41,4 +82,3 @@ export function LanguageSelector() {
     </DropdownMenu.Root>
   );
 }
-
