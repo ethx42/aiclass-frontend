@@ -23,6 +23,10 @@ import {
   PlusIcon,
   TrashIcon,
   MagnifyingGlassIcon,
+  PersonIcon,
+  EnvelopeClosedIcon,
+  CheckCircledIcon,
+  CalendarIcon,
 } from "@radix-ui/react-icons";
 import { useClass } from "@/src/lib/hooks/use-classes";
 import {
@@ -582,20 +586,32 @@ export default function RosterPage() {
             </Flex>
           ) : (
             <Box style={{ overflowX: "auto" }}>
-              <Table.Root>
+              <Table.Root className="premium-table">
                 <Table.Header>
                   <Table.Row>
                     <Table.ColumnHeaderCell>
-                      {t("roster.name")}
+                      <Flex align="center" gap="2">
+                        <PersonIcon width="14" height="14" />
+                        {t("roster.name")}
+                      </Flex>
                     </Table.ColumnHeaderCell>
                     <Table.ColumnHeaderCell>
-                      {t("roster.email")}
+                      <Flex align="center" gap="2">
+                        <EnvelopeClosedIcon width="14" height="14" />
+                        {t("roster.email")}
+                      </Flex>
                     </Table.ColumnHeaderCell>
                     <Table.ColumnHeaderCell>
-                      {t("roster.status")}
+                      <Flex align="center" gap="2">
+                        <CheckCircledIcon width="14" height="14" />
+                        {t("roster.status")}
+                      </Flex>
                     </Table.ColumnHeaderCell>
                     <Table.ColumnHeaderCell>
-                      {t("roster.enrolledDate")}
+                      <Flex align="center" gap="2">
+                        <CalendarIcon width="14" height="14" />
+                        {t("roster.enrolledDate")}
+                      </Flex>
                     </Table.ColumnHeaderCell>
                     <Table.ColumnHeaderCell>
                       {t("roster.actions")}
@@ -607,12 +623,32 @@ export default function RosterPage() {
                   {enrollments.map((enrollment) => (
                     <Table.Row key={enrollment.id}>
                       <Table.Cell>
-                        <Text weight="bold">{enrollment.studentName}</Text>
+                        <Flex
+                          align="center"
+                          gap="2"
+                          className="table-cell-with-icon"
+                        >
+                          <Box className="table-cell-icon">
+                            <PersonIcon width="12" height="12" />
+                          </Box>
+                          <Text weight="bold" style={{ fontWeight: 600 }}>
+                            {enrollment.studentName}
+                          </Text>
+                        </Flex>
                       </Table.Cell>
                       <Table.Cell>
-                        <Text color="gray">
-                          {enrollment.studentEmail || "-"}
-                        </Text>
+                        <Flex
+                          align="center"
+                          gap="2"
+                          className="table-cell-with-icon"
+                        >
+                          <Box className="table-cell-icon">
+                            <EnvelopeClosedIcon width="12" height="12" />
+                          </Box>
+                          <Text color="gray" size="2">
+                            {enrollment.studentEmail || "-"}
+                          </Text>
+                        </Flex>
                       </Table.Cell>
                       <Table.Cell>
                         <Badge
@@ -621,12 +657,41 @@ export default function RosterPage() {
                               ? "green"
                               : "gray"
                           }
+                          style={{
+                            fontWeight: 600,
+                            fontSize: "11px",
+                            padding: "4px 10px",
+                            boxShadow: "0 1px 2px rgba(0, 0, 0, 0.05)",
+                            textTransform: "capitalize",
+                          }}
                         >
+                          {enrollment.status === EnrollmentStatus.ACTIVE && (
+                            <CheckCircledIcon
+                              style={{
+                                marginRight: "4px",
+                                width: "10px",
+                                height: "10px",
+                              }}
+                            />
+                          )}
                           {enrollment.status}
                         </Badge>
                       </Table.Cell>
                       <Table.Cell>
-                        {new Date(enrollment.enrolledAt).toLocaleDateString()}
+                        <Flex
+                          align="center"
+                          gap="2"
+                          className="table-cell-with-icon"
+                        >
+                          <Box className="table-cell-icon">
+                            <CalendarIcon width="12" height="12" />
+                          </Box>
+                          <Text size="2" color="gray">
+                            {new Date(
+                              enrollment.enrolledAt
+                            ).toLocaleDateString()}
+                          </Text>
+                        </Flex>
                       </Table.Cell>
                       <Table.Cell>
                         <Button
@@ -643,6 +708,10 @@ export default function RosterPage() {
                             deleteEnrollment.isPending ||
                             (enrollmentToDelete === enrollment.id && isFetching)
                           }
+                          style={{
+                            transition: "all 0.2s ease",
+                          }}
+                          className="hover:scale-105"
                         >
                           {(deleteEnrollment.isPending ||
                             (enrollmentToDelete === enrollment.id &&

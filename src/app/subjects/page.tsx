@@ -23,6 +23,9 @@ import {
   PlusIcon,
   Pencil1Icon,
   TrashIcon,
+  IdCardIcon,
+  FileTextIcon,
+  ReaderIcon,
 } from "@radix-ui/react-icons";
 import { useAuthStore } from "@/src/lib/stores/auth-store";
 import {
@@ -203,59 +206,109 @@ export default function SubjectsPage() {
             </Flex>
           ) : (
             <Box style={{ overflowX: "auto" }}>
-              <Table.Root>
-              <Table.Header>
-                <Table.Row>
-                  <Table.ColumnHeaderCell>
-                    {t("subjects.code")}
-                  </Table.ColumnHeaderCell>
-                  <Table.ColumnHeaderCell>
-                    {t("roster.name")}
-                  </Table.ColumnHeaderCell>
-                  <Table.ColumnHeaderCell>
-                    {t("subjects.description")}
-                  </Table.ColumnHeaderCell>
-                  <Table.ColumnHeaderCell>
-                    {t("roster.actions")}
-                  </Table.ColumnHeaderCell>
-                </Table.Row>
-              </Table.Header>
-
-              <Table.Body>
-                {subjects.map((subject) => (
-                  <Table.Row key={subject.id}>
-                    <Table.Cell>
-                      <Text weight="bold">{subject.code}</Text>
-                    </Table.Cell>
-                    <Table.Cell>{subject.name}</Table.Cell>
-                    <Table.Cell>
-                      <Text size="2" color="gray">
-                        {subject.description || "-"}
-                      </Text>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <Flex gap="2">
-                        <IconButton
-                          size="1"
-                          variant="soft"
-                          onClick={() => handleEditClick(subject)}
-                        >
-                          <Pencil1Icon />
-                        </IconButton>
-                        <IconButton
-                          size="1"
-                          variant="soft"
-                          color="red"
-                          onClick={() => handleDeleteClick(subject.id)}
-                        >
-                          <TrashIcon />
-                        </IconButton>
+              <Table.Root className="premium-table">
+                <Table.Header>
+                  <Table.Row>
+                    <Table.ColumnHeaderCell>
+                      <Flex align="center" gap="2">
+                        <IdCardIcon width="14" height="14" />
+                        {t("subjects.code")}
                       </Flex>
-                    </Table.Cell>
+                    </Table.ColumnHeaderCell>
+                    <Table.ColumnHeaderCell>
+                      <Flex align="center" gap="2">
+                        <FileTextIcon width="14" height="14" />
+                        {t("roster.name")}
+                      </Flex>
+                    </Table.ColumnHeaderCell>
+                    <Table.ColumnHeaderCell>
+                      <Flex align="center" gap="2">
+                        <ReaderIcon width="14" height="14" />
+                        {t("subjects.description")}
+                      </Flex>
+                    </Table.ColumnHeaderCell>
+                    <Table.ColumnHeaderCell>
+                      {t("roster.actions")}
+                    </Table.ColumnHeaderCell>
                   </Table.Row>
-                ))}
-              </Table.Body>
-            </Table.Root>
+                </Table.Header>
+
+                <Table.Body>
+                  {subjects.map((subject) => (
+                    <Table.Row key={subject.id}>
+                      <Table.Cell>
+                        <Flex
+                          align="center"
+                          gap="2"
+                          className="table-cell-with-icon"
+                        >
+                          <Box className="table-cell-icon">
+                            <IdCardIcon width="12" height="12" />
+                          </Box>
+                          <Text weight="bold" style={{ fontWeight: 600 }}>
+                            {subject.code}
+                          </Text>
+                        </Flex>
+                      </Table.Cell>
+                      <Table.Cell>
+                        <Flex
+                          align="center"
+                          gap="2"
+                          className="table-cell-with-icon"
+                        >
+                          <Box className="table-cell-icon">
+                            <FileTextIcon width="12" height="12" />
+                          </Box>
+                          <Text style={{ fontWeight: 500 }}>
+                            {subject.name}
+                          </Text>
+                        </Flex>
+                      </Table.Cell>
+                      <Table.Cell>
+                        <Flex
+                          align="center"
+                          gap="2"
+                          className="table-cell-with-icon"
+                        >
+                          <Box className="table-cell-icon">
+                            <ReaderIcon width="12" height="12" />
+                          </Box>
+                          <Text size="2" color="gray">
+                            {subject.description || "-"}
+                          </Text>
+                        </Flex>
+                      </Table.Cell>
+                      <Table.Cell>
+                        <Flex gap="2">
+                          <IconButton
+                            size="1"
+                            variant="soft"
+                            onClick={() => handleEditClick(subject)}
+                            style={{
+                              transition: "all 0.2s ease",
+                            }}
+                            className="hover:scale-105"
+                          >
+                            <Pencil1Icon />
+                          </IconButton>
+                          <IconButton
+                            size="1"
+                            variant="soft"
+                            color="red"
+                            onClick={() => handleDeleteClick(subject.id)}
+                            style={{
+                              transition: "all 0.2s ease",
+                            }}
+                            className="hover:scale-105"
+                          >
+                            <TrashIcon />
+                          </IconButton>
+                        </Flex>
+                      </Table.Cell>
+                    </Table.Row>
+                  ))}
+                </Table.Body>
+              </Table.Root>
             </Box>
           )}
         </Flex>

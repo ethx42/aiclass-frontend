@@ -10,7 +10,14 @@ import {
   Spinner,
   Callout,
 } from "@radix-ui/themes";
-import { InfoCircledIcon } from "@radix-ui/react-icons";
+import {
+  InfoCircledIcon,
+  FileTextIcon,
+  BookmarkIcon,
+  StarIcon,
+  BarChartIcon,
+  CalendarIcon,
+} from "@radix-ui/react-icons";
 import { useAuthStore } from "@/src/lib/stores/auth-store";
 import { useGrades } from "@/src/lib/hooks/use-grades";
 import { AssessmentKind } from "@/src/types/api";
@@ -160,23 +167,38 @@ export function StudentClassView({ classId }: StudentClassViewProps) {
               </Flex>
             ) : (
               <Box style={{ overflowX: "auto" }}>
-                <Table.Root>
+                <Table.Root className="premium-table">
                   <Table.Header>
                     <Table.Row>
                       <Table.ColumnHeaderCell>
-                        {t("grades.assessment")}
+                        <Flex align="center" gap="2">
+                          <FileTextIcon width="14" height="14" />
+                          {t("grades.assessment")}
+                        </Flex>
                       </Table.ColumnHeaderCell>
                       <Table.ColumnHeaderCell>
-                        {t("grades.type")}
+                        <Flex align="center" gap="2">
+                          <BookmarkIcon width="14" height="14" />
+                          {t("grades.type")}
+                        </Flex>
                       </Table.ColumnHeaderCell>
                       <Table.ColumnHeaderCell>
-                        {t("grades.score")}
+                        <Flex align="center" gap="2">
+                          <StarIcon width="14" height="14" />
+                          {t("grades.score")}
+                        </Flex>
                       </Table.ColumnHeaderCell>
                       <Table.ColumnHeaderCell>
-                        {t("grades.percentage")}
+                        <Flex align="center" gap="2">
+                          <BarChartIcon width="14" height="14" />
+                          {t("grades.percentage")}
+                        </Flex>
                       </Table.ColumnHeaderCell>
                       <Table.ColumnHeaderCell>
-                        {t("grades.date")}
+                        <Flex align="center" gap="2">
+                          <CalendarIcon width="14" height="14" />
+                          {t("grades.date")}
+                        </Flex>
                       </Table.ColumnHeaderCell>
                     </Table.Row>
                   </Table.Header>
@@ -196,11 +218,25 @@ export function StudentClassView({ classId }: StudentClassViewProps) {
                         return (
                           <Table.Row key={grade.id}>
                             <Table.Cell>
-                              <Text weight="bold">{grade.assessmentName}</Text>
+                              <Flex align="center" gap="2" className="table-cell-with-icon">
+                                <Box className="table-cell-icon">
+                                  <FileTextIcon width="12" height="12" />
+                                </Box>
+                                <Text weight="bold" style={{ fontWeight: 600 }}>
+                                  {grade.assessmentName}
+                                </Text>
+                              </Flex>
                             </Table.Cell>
                             <Table.Cell>
                               <Badge
                                 color={getAssessmentColor(grade.assessmentKind)}
+                                style={{
+                                  fontWeight: 600,
+                                  fontSize: "11px",
+                                  padding: "4px 10px",
+                                  boxShadow: "0 1px 2px rgba(0, 0, 0, 0.05)",
+                                  textTransform: "capitalize",
+                                }}
                               >
                                 {t(
                                   `grades.${grade.assessmentKind.toLowerCase()}`
@@ -208,21 +244,34 @@ export function StudentClassView({ classId }: StudentClassViewProps) {
                               </Badge>
                             </Table.Cell>
                             <Table.Cell>
-                              <Text>
-                                {grade.score} / {grade.maxScore}
-                              </Text>
+                              <Flex align="center" gap="2">
+                                <Text weight="medium" style={{ fontWeight: 500 }}>
+                                  {grade.score} / {grade.maxScore}
+                                </Text>
+                              </Flex>
                             </Table.Cell>
                             <Table.Cell>
                               <Badge
                                 color={getGradeColor(parseFloat(percentage))}
+                                style={{
+                                  fontWeight: 600,
+                                  fontSize: "11px",
+                                  padding: "4px 10px",
+                                  boxShadow: "0 1px 2px rgba(0, 0, 0, 0.05)",
+                                }}
                               >
                                 {percentage}%
                               </Badge>
                             </Table.Cell>
                             <Table.Cell>
-                              <Text size="2" color="gray">
-                                {new Date(grade.gradedAt).toLocaleDateString()}
-                              </Text>
+                              <Flex align="center" gap="2" className="table-cell-with-icon">
+                                <Box className="table-cell-icon">
+                                  <CalendarIcon width="12" height="12" />
+                                </Box>
+                                <Text size="2" color="gray">
+                                  {new Date(grade.gradedAt).toLocaleDateString()}
+                                </Text>
+                              </Flex>
                             </Table.Cell>
                           </Table.Row>
                         );

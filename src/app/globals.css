@@ -135,3 +135,78 @@ body {
 .enrollment-card:hover::before {
   opacity: 1;
 }
+
+/* Premium table styles */
+.premium-table {
+  border-radius: var(--radius-4);
+  overflow: hidden;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
+  background: var(--color-background);
+  border: 1px solid var(--gray-4);
+}
+
+.premium-table .rt-TableHeader {
+  background: linear-gradient(135deg, var(--gray-2) 0%, var(--gray-1) 100%);
+  border-bottom: 2px solid var(--gray-4);
+}
+
+.premium-table .rt-TableHeader .rt-TableColumnHeaderCell {
+  font-weight: 600;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: var(--gray-11);
+  padding: 14px 16px;
+}
+
+.premium-table .rt-TableBody .rt-TableRow {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  border-bottom: 1px solid var(--gray-3);
+}
+
+.premium-table .rt-TableBody .rt-TableRow:hover {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.03) 0%, rgba(59, 130, 246, 0.01) 100%);
+  transform: translateX(2px);
+  box-shadow: inset 3px 0 0 var(--accent-9);
+}
+
+.premium-table .rt-TableBody .rt-TableRow:last-child {
+  border-bottom: none;
+}
+
+.premium-table .rt-TableBody .rt-TableCell {
+  padding: 14px 16px;
+  font-size: 14px;
+}
+
+.premium-table .rt-TableBody .rt-TableCell:first-child {
+  font-weight: 500;
+}
+
+/* Enhanced badges in tables */
+.premium-table .rt-Badge {
+  font-weight: 600;
+  font-size: 11px;
+  padding: 4px 10px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  text-transform: capitalize;
+}
+
+/* Table cell with icon */
+.table-cell-with-icon {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.table-cell-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  background: var(--gray-2);
+  color: var(--gray-11);
+  flex-shrink: 0;
+}

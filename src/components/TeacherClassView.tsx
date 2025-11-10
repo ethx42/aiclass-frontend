@@ -14,6 +14,7 @@ import {
   Spinner,
   Callout,
   IconButton,
+  Badge,
 } from "@radix-ui/themes";
 import {
   PlusIcon,
@@ -21,6 +22,9 @@ import {
   Pencil1Icon,
   CheckIcon,
   Cross2Icon,
+  PersonIcon,
+  FileTextIcon,
+  BarChartIcon,
 } from "@radix-ui/react-icons";
 import { useEnrollments } from "@/src/lib/hooks/use-enrollments";
 import {
@@ -401,19 +405,28 @@ export function TeacherClassView({ classId }: TeacherClassViewProps) {
             </Flex>
           ) : (
             <Box style={{ overflowX: "auto" }}>
-              <Table.Root>
+              <Table.Root className="premium-table">
                 <Table.Header>
                   <Table.Row>
                     <Table.ColumnHeaderCell>
-                      {t("grades.student")}
+                      <Flex align="center" gap="2">
+                        <PersonIcon width="14" height="14" />
+                        {t("grades.student")}
+                      </Flex>
                     </Table.ColumnHeaderCell>
                     {assessments.map((assessment) => (
                       <Table.ColumnHeaderCell key={assessment}>
-                        {assessment.split(":")[1]}
+                        <Flex align="center" gap="2">
+                          <FileTextIcon width="14" height="14" />
+                          {assessment.split(":")[1]}
+                        </Flex>
                       </Table.ColumnHeaderCell>
                     ))}
                     <Table.ColumnHeaderCell>
-                      {t("grades.average")}
+                      <Flex align="center" gap="2">
+                        <BarChartIcon width="14" height="14" />
+                        {t("grades.average")}
+                      </Flex>
                     </Table.ColumnHeaderCell>
                   </Table.Row>
                 </Table.Header>
@@ -435,7 +448,14 @@ export function TeacherClassView({ classId }: TeacherClassViewProps) {
                     return (
                       <Table.Row key={enrollment.id}>
                         <Table.Cell>
-                          <Text weight="bold">{enrollment.studentName}</Text>
+                          <Flex align="center" gap="2" className="table-cell-with-icon">
+                            <Box className="table-cell-icon">
+                              <PersonIcon width="12" height="12" />
+                            </Box>
+                            <Text weight="bold" style={{ fontWeight: 600 }}>
+                              {enrollment.studentName}
+                            </Text>
+                          </Flex>
                         </Table.Cell>
                         {assessments.map((assessment) => {
                           const grade = studentGrades.find(
@@ -569,7 +589,33 @@ export function TeacherClassView({ classId }: TeacherClassViewProps) {
                           );
                         })}
                         <Table.Cell>
-                          <Text weight="bold">{average}%</Text>
+                          <Flex align="center" gap="2">
+                            {average !== "-" ? (
+                              <Badge
+                                color={
+                                  parseFloat(average) >= 90
+                                    ? "green"
+                                    : parseFloat(average) >= 80
+                                    ? "blue"
+                                    : parseFloat(average) >= 70
+                                    ? "orange"
+                                    : "red"
+                                }
+                                style={{
+                                  fontWeight: 600,
+                                  fontSize: "11px",
+                                  padding: "4px 10px",
+                                  boxShadow: "0 1px 2px rgba(0, 0, 0, 0.05)",
+                                }}
+                              >
+                                {average}%
+                              </Badge>
+                            ) : (
+                              <Text color="gray" size="2">
+                                {average}
+                              </Text>
+                            )}
+                          </Flex>
                         </Table.Cell>
                       </Table.Row>
                     );
