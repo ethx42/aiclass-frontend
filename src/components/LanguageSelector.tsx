@@ -2,14 +2,15 @@
 
 import { DropdownMenu, Button, Flex, Text, Box } from "@radix-ui/themes";
 import { GlobeIcon } from "@radix-ui/react-icons";
-import { useTranslations } from "@/src/lib/i18n/provider";
+import { useTranslations, useT } from "@/src/lib/i18n/provider";
 
 export function LanguageSelector() {
   const { locale, setLocale } = useTranslations();
+  const t = useT();
 
   const languages = [
-    { code: "en" as const, name: "English", flag: "🇺🇸", displayCode: "ENG" },
-    { code: "es" as const, name: "Español", flag: "🇪🇸", displayCode: "ES" },
+    { code: "en" as const, nameKey: "english", flag: "🇺🇸", displayCode: "ENG" },
+    { code: "es" as const, nameKey: "spanish", flag: "🇪🇸", displayCode: "ES" },
   ];
 
   const currentLanguage =
@@ -74,7 +75,7 @@ export function LanguageSelector() {
           >
             <Flex align="center" gap="2">
               <Text>{lang.flag}</Text>
-              <Text>{lang.name}</Text>
+              <Text>{t(`language.${lang.nameKey}`)}</Text>
             </Flex>
           </DropdownMenu.Item>
         ))}
