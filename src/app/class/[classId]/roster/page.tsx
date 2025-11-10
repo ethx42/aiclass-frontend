@@ -55,8 +55,12 @@ export default function RosterPage() {
 
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [enrollmentToDelete, setEnrollmentToDelete] = useState<string | null>(null);
-  const [studentNameToDelete, setStudentNameToDelete] = useState<string | null>(null);
+  const [enrollmentToDelete, setEnrollmentToDelete] = useState<string | null>(
+    null
+  );
+  const [studentNameToDelete, setStudentNameToDelete] = useState<string | null>(
+    null
+  );
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<User[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -240,7 +244,10 @@ export default function RosterPage() {
               onOpenChange={handleDialogOpenChange}
             >
               <Dialog.Trigger>
-                <Button size={{ initial: "2", sm: "3" }} className="w-full sm:w-auto">
+                <Button
+                  size={{ initial: "2", sm: "3" }}
+                  className="w-full sm:w-auto"
+                >
                   <PlusIcon /> {t("roster.addStudent")}
                 </Button>
               </Dialog.Trigger>
@@ -453,63 +460,70 @@ export default function RosterPage() {
           ) : (
             <Box style={{ overflowX: "auto" }}>
               <Table.Root>
-              <Table.Header>
-                <Table.Row>
-                  <Table.ColumnHeaderCell>
-                    {t("roster.name")}
-                  </Table.ColumnHeaderCell>
-                  <Table.ColumnHeaderCell>
-                    {t("roster.email")}
-                  </Table.ColumnHeaderCell>
-                  <Table.ColumnHeaderCell>
-                    {t("roster.status")}
-                  </Table.ColumnHeaderCell>
-                  <Table.ColumnHeaderCell>
-                    {t("roster.enrolledDate")}
-                  </Table.ColumnHeaderCell>
-                  <Table.ColumnHeaderCell>
-                    {t("roster.actions")}
-                  </Table.ColumnHeaderCell>
-                </Table.Row>
-              </Table.Header>
-
-              <Table.Body>
-                {enrollments.map((enrollment) => (
-                  <Table.Row key={enrollment.id}>
-                    <Table.Cell>
-                      <Text weight="bold">{enrollment.studentName}</Text>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <Text color="gray">{enrollment.studentEmail || "-"}</Text>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <Badge
-                        color={
-                          enrollment.status === EnrollmentStatus.ACTIVE
-                            ? "green"
-                            : "gray"
-                        }
-                      >
-                        {enrollment.status}
-                      </Badge>
-                    </Table.Cell>
-                    <Table.Cell>
-                      {new Date(enrollment.enrolledAt).toLocaleDateString()}
-                    </Table.Cell>
-                    <Table.Cell>
-                      <Button
-                        size="1"
-                        variant="soft"
-                        color="red"
-                        onClick={() => handleRemoveStudent(enrollment.id, enrollment.studentName)}
-                      >
-                        <TrashIcon />
-                      </Button>
-                    </Table.Cell>
+                <Table.Header>
+                  <Table.Row>
+                    <Table.ColumnHeaderCell>
+                      {t("roster.name")}
+                    </Table.ColumnHeaderCell>
+                    <Table.ColumnHeaderCell>
+                      {t("roster.email")}
+                    </Table.ColumnHeaderCell>
+                    <Table.ColumnHeaderCell>
+                      {t("roster.status")}
+                    </Table.ColumnHeaderCell>
+                    <Table.ColumnHeaderCell>
+                      {t("roster.enrolledDate")}
+                    </Table.ColumnHeaderCell>
+                    <Table.ColumnHeaderCell>
+                      {t("roster.actions")}
+                    </Table.ColumnHeaderCell>
                   </Table.Row>
-                ))}
-              </Table.Body>
-            </Table.Root>
+                </Table.Header>
+
+                <Table.Body>
+                  {enrollments.map((enrollment) => (
+                    <Table.Row key={enrollment.id}>
+                      <Table.Cell>
+                        <Text weight="bold">{enrollment.studentName}</Text>
+                      </Table.Cell>
+                      <Table.Cell>
+                        <Text color="gray">
+                          {enrollment.studentEmail || "-"}
+                        </Text>
+                      </Table.Cell>
+                      <Table.Cell>
+                        <Badge
+                          color={
+                            enrollment.status === EnrollmentStatus.ACTIVE
+                              ? "green"
+                              : "gray"
+                          }
+                        >
+                          {enrollment.status}
+                        </Badge>
+                      </Table.Cell>
+                      <Table.Cell>
+                        {new Date(enrollment.enrolledAt).toLocaleDateString()}
+                      </Table.Cell>
+                      <Table.Cell>
+                        <Button
+                          size="1"
+                          variant="soft"
+                          color="red"
+                          onClick={() =>
+                            handleRemoveStudent(
+                              enrollment.id,
+                              enrollment.studentName
+                            )
+                          }
+                        >
+                          <TrashIcon />
+                        </Button>
+                      </Table.Cell>
+                    </Table.Row>
+                  ))}
+                </Table.Body>
+              </Table.Root>
             </Box>
           )}
         </Flex>
