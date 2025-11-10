@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
   Box,
@@ -79,7 +79,10 @@ export default function RosterPage() {
   const searchInputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const enrollments = enrollmentsData?.data?.content || [];
+  const enrollments = useMemo(
+    () => enrollmentsData?.data?.content || [],
+    [enrollmentsData?.data?.content]
+  );
 
   // Open select and focus input when dialog opens
   useEffect(() => {
