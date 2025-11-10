@@ -15,6 +15,7 @@ import {
   Callout,
   Badge,
   Dialog,
+  AlertDialog,
 } from "@radix-ui/themes";
 import {
   ArrowLeftIcon,
@@ -53,6 +54,9 @@ export default function RosterPage() {
   const deleteEnrollment = useDeleteEnrollment();
 
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [enrollmentToDelete, setEnrollmentToDelete] = useState<string | null>(null);
+  const [studentNameToDelete, setStudentNameToDelete] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<User[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -176,13 +180,22 @@ export default function RosterPage() {
     }
   };
 
-  const handleRemoveStudent = async (enrollmentId: string) => {
-    if (confirm(t("roster.removeStudent"))) {
-      try {
-        await deleteEnrollment.mutateAsync(enrollmentId);
-      } catch (err) {
-        console.error("Failed to remove student:", err);
-      }
+  const handleRemoveStudent = (enrollmentId: string, studentName: string) => {
+    setEnrollmentToDelete(enrollmentId);
+    setStudentNameToDelete(studentName);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!enrollmentToDelete) return;
+
+    try {
+      await deleteEnrollment.mutateAsync(enrollmentToDelete);
+      setIsDeleteDialogOpen(false);
+      setEnrollmentToDelete(null);
+      setStudentNameToDelete(null);
+    } catch (err) {
+      console.error("Failed to remove student:", err);
     }
   };
 
@@ -488,7 +501,7 @@ export default function RosterPage() {
                         size="1"
                         variant="soft"
                         color="red"
-                        onClick={() => handleRemoveStudent(enrollment.id)}
+                        onClick={() => handleRemoveStudent(enrollment.id, enrollment.studentName)}
                       >
                         <TrashIcon />
                       </Button>
@@ -501,6 +514,71 @@ export default function RosterPage() {
           )}
         </Flex>
       </Card>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog.Root
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+      >
+        <AlertDialog.Content style={{ maxWidth: 500 }}>
+          <AlertDialog.Title>{t("roster.removeStudent")}</AlertDialog.Title>
+          <Box mb="3">
+            {studentNameToDelete ? (
+              <Flex direction="column" gap="2">
+                <AlertDialog.Description size="2">
+                  {t("roster.removeStudentConfirmMessage")}
+                </AlertDialog.Description>
+                <Box
+                  style={{
+                    padding: "12px",
+                    backgroundColor: "var(--red-3)",
+                    borderRadius: "var(--radius-3)",
+                    border: "1px solid var(--red-6)",
+                  }}
+                >
+                  <Flex align="center" gap="2">
+                    <Text size="3" weight="bold" color="red">
+                      {studentNameToDelete}
+                    </Text>
+                  </Flex>
+                </Box>
+                <Text size="1" color="gray">
+                  {t("roster.removeStudentWarning")}
+                </Text>
+              </Flex>
+            ) : (
+              <AlertDialog.Description size="2">
+                {t("roster.removeStudentConfirm")}
+              </AlertDialog.Description>
+            )}
+          </Box>
+
+          <Flex
+            direction={{ initial: "column", sm: "row" }}
+            gap="3"
+            mt="4"
+            justify="end"
+          >
+            <AlertDialog.Cancel>
+              <Button variant="soft" color="gray" className="w-full sm:w-auto">
+                {t("common.cancel")}
+              </Button>
+            </AlertDialog.Cancel>
+            <AlertDialog.Action>
+              <Button
+                color="red"
+                onClick={handleConfirmDelete}
+                disabled={deleteEnrollment.isPending}
+                className="w-full sm:w-auto"
+              >
+                {deleteEnrollment.isPending
+                  ? t("roster.removing")
+                  : t("roster.removeStudent")}
+              </Button>
+            </AlertDialog.Action>
+          </Flex>
+        </AlertDialog.Content>
+      </AlertDialog.Root>
     </Box>
   );
 }

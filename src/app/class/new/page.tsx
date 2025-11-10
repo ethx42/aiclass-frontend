@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import {
   Box,
@@ -13,7 +13,11 @@ import {
   Button,
   Callout,
 } from "@radix-ui/themes";
-import { ArrowLeftIcon, InfoCircledIcon } from "@radix-ui/react-icons";
+import {
+  ArrowLeftIcon,
+  InfoCircledIcon,
+  MagnifyingGlassIcon,
+} from "@radix-ui/react-icons";
 import { useAuthStore } from "@/src/lib/stores/auth-store";
 import { useSubjects } from "@/src/lib/hooks/use-subjects";
 import { useCreateClass } from "@/src/lib/hooks/use-classes";
@@ -36,6 +40,22 @@ export default function CreateClassPage() {
   });
 
   const [error, setError] = useState("");
+  const [subjectSearchQuery, setSubjectSearchQuery] = useState("");
+  const [isSubjectSelectOpen, setIsSubjectSelectOpen] = useState(false);
+
+  // Filter subjects based on search query
+  const filteredSubjects = useMemo(() => {
+    const subjects = subjectsData?.data?.content || [];
+    if (!subjectSearchQuery.trim()) {
+      return subjects;
+    }
+    const query = subjectSearchQuery.toLowerCase();
+    return subjects.filter(
+      (subject) =>
+        subject.code.toLowerCase().includes(query) ||
+        subject.name.toLowerCase().includes(query)
+    );
+  }, [subjectsData?.data?.content, subjectSearchQuery]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,8 +79,6 @@ export default function CreateClassPage() {
       setError(errorMessage);
     }
   };
-
-  const subjects = subjectsData?.data?.content || [];
 
   return (
     <Box p={{ initial: "4", sm: "6" }}>
@@ -99,27 +117,82 @@ export default function CreateClassPage() {
                   </Text>
                   <Select.Root
                     value={formData.subjectId}
-                    onValueChange={(value) =>
-                      setFormData({ ...formData, subjectId: value })
-                    }
+                    onValueChange={(value) => {
+                      setFormData({ ...formData, subjectId: value });
+                      setIsSubjectSelectOpen(false);
+                      setSubjectSearchQuery("");
+                    }}
+                    open={isSubjectSelectOpen}
+                    onOpenChange={setIsSubjectSelectOpen}
                     required
                   >
                     <Select.Trigger
                       placeholder={t("class.selectSubject")}
                       style={{ width: "100%" }}
                     />
-                    <Select.Content>
-                      {loadingSubjects ? (
-                        <Select.Item value="loading">
-                          {t("common.loading")}
-                        </Select.Item>
-                      ) : (
-                        subjects.map((subject) => (
-                          <Select.Item key={subject.id} value={subject.id}>
-                            {subject.code} - {subject.name}
-                          </Select.Item>
-                        ))
-                      )}
+                    <Select.Content
+                      style={{
+                        width: "var(--radix-select-trigger-width)",
+                        display: "flex",
+                        flexDirection: "column",
+                      }}
+                      position="popper"
+                    >
+                      {/* Search field - Fixed at top */}
+                      <Box
+                        p="2"
+                        style={{
+                          borderBottom: "1px solid var(--gray-6)",
+                          flexShrink: 0,
+                          backgroundColor: "var(--color-background)",
+                        }}
+                      >
+                        <TextField.Root
+                          placeholder={t("class.searchSubject")}
+                          value={subjectSearchQuery}
+                          onChange={(e) =>
+                            setSubjectSearchQuery(e.target.value)
+                          }
+                          onKeyDown={(e) => {
+                            // Prevent closing the select when typing
+                            e.stopPropagation();
+                          }}
+                          onClick={(e) => {
+                            // Prevent closing the select when clicking
+                            e.stopPropagation();
+                          }}
+                          autoFocus={false}
+                        >
+                          <TextField.Slot>
+                            <MagnifyingGlassIcon />
+                          </TextField.Slot>
+                        </TextField.Root>
+                      </Box>
+
+                      {/* Filtered results - Scrollable area */}
+                      <Box style={{ flex: 1, overflowY: "auto", minHeight: 0 }}>
+                        {loadingSubjects ? (
+                          <Box p="3" style={{ textAlign: "center" }}>
+                            <Text size="2" color="gray">
+                              {t("common.loading")}
+                            </Text>
+                          </Box>
+                        ) : filteredSubjects.length === 0 ? (
+                          <Box p="3" style={{ textAlign: "center" }}>
+                            <Text size="2" color="gray">
+                              {subjectSearchQuery
+                                ? t("class.noSubjectsFound")
+                                : t("class.noSubjectsAvailable")}
+                            </Text>
+                          </Box>
+                        ) : (
+                          filteredSubjects.map((subject) => (
+                            <Select.Item key={subject.id} value={subject.id}>
+                              {subject.code} - {subject.name}
+                            </Select.Item>
+                          ))
+                        )}
+                      </Box>
                     </Select.Content>
                   </Select.Root>
                 </Box>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
   Box,
@@ -22,6 +22,7 @@ import {
   DotsVerticalIcon,
   Pencil1Icon,
   TrashIcon,
+  MagnifyingGlassIcon,
 } from "@radix-ui/react-icons";
 import { useAuthStore } from "@/src/lib/stores/auth-store";
 import {
@@ -77,6 +78,8 @@ export default function ClassDetailPage() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [editError, setEditError] = useState("");
+  const [subjectSearchQuery, setSubjectSearchQuery] = useState("");
+  const [isSubjectSelectOpen, setIsSubjectSelectOpen] = useState(false);
   const [formData, setFormData] = useState({
     subjectId: "",
     year: 0,
@@ -114,7 +117,19 @@ export default function ClassDetailPage() {
     }
   }
 
-  const subjects = subjectsData?.data?.content || [];
+  // Filter subjects based on search query
+  const filteredSubjects = useMemo(() => {
+    const subjects = subjectsData?.data?.content || [];
+    if (!subjectSearchQuery.trim()) {
+      return subjects;
+    }
+    const query = subjectSearchQuery.toLowerCase();
+    return subjects.filter(
+      (subject) =>
+        subject.code.toLowerCase().includes(query) ||
+        subject.name.toLowerCase().includes(query)
+    );
+  }, [subjectsData?.data?.content, subjectSearchQuery]);
 
   const handleEditClick = () => {
     if (classData) {
@@ -125,6 +140,7 @@ export default function ClassDetailPage() {
         groupCode: classData.groupCode,
         schedule: classData.schedule || "",
       });
+      setSubjectSearchQuery("");
       setIsEditDialogOpen(true);
     }
   };
@@ -201,7 +217,12 @@ export default function ClassDetailPage() {
           background: "var(--color-background)",
         }}
       >
-        <Flex direction="column" gap="3" px={{ initial: "4", sm: "6" }} py={{ initial: "3", sm: "4" }}>
+        <Flex
+          direction="column"
+          gap="3"
+          px={{ initial: "4", sm: "6" }}
+          py={{ initial: "3", sm: "4" }}
+        >
           <Button
             variant="ghost"
             style={{ width: "fit-content" }}
@@ -260,7 +281,11 @@ export default function ClassDetailPage() {
                 </Button>
                 <DropdownMenu.Root>
                   <DropdownMenu.Trigger>
-                    <Button variant="soft" color="gray" size={{ initial: "2", sm: "3" }}>
+                    <Button
+                      variant="soft"
+                      color="gray"
+                      size={{ initial: "2", sm: "3" }}
+                    >
                       <DotsVerticalIcon />
                     </Button>
                   </DropdownMenu.Trigger>
@@ -315,27 +340,81 @@ export default function ClassDetailPage() {
               </Text>
               <Select.Root
                 value={formData.subjectId}
-                onValueChange={(value) =>
-                  setFormData({ ...formData, subjectId: value })
-                }
+                onValueChange={(value) => {
+                  setFormData({ ...formData, subjectId: value });
+                  setIsSubjectSelectOpen(false);
+                  setSubjectSearchQuery("");
+                }}
+                open={isSubjectSelectOpen}
+                onOpenChange={setIsSubjectSelectOpen}
                 required
               >
                 <Select.Trigger
                   placeholder={t("class.selectSubject")}
                   style={{ width: "100%" }}
                 />
-                <Select.Content>
-                  {loadingSubjects ? (
-                    <Select.Item value="loading" disabled>
-                      {t("common.loading")}
-                    </Select.Item>
-                  ) : (
-                    subjects.map((subject) => (
-                      <Select.Item key={subject.id} value={subject.id}>
-                        {subject.code} - {subject.name}
-                      </Select.Item>
-                    ))
-                  )}
+                <Select.Content
+                  style={{
+                    width: "var(--radix-select-trigger-width)",
+                    height: "400px",
+                    display: "flex",
+                    flexDirection: "column",
+                  }}
+                  position="popper"
+                >
+                  {/* Search field - Fixed at top */}
+                  <Box
+                    p="2"
+                    style={{
+                      borderBottom: "1px solid var(--gray-6)",
+                      flexShrink: 0,
+                      backgroundColor: "var(--color-background)",
+                    }}
+                  >
+                    <TextField.Root
+                      placeholder={t("class.searchSubject")}
+                      value={subjectSearchQuery}
+                      onChange={(e) => setSubjectSearchQuery(e.target.value)}
+                      onKeyDown={(e) => {
+                        // Prevent closing the select when typing
+                        e.stopPropagation();
+                      }}
+                      onClick={(e) => {
+                        // Prevent closing the select when clicking
+                        e.stopPropagation();
+                      }}
+                      autoFocus={false}
+                    >
+                      <TextField.Slot>
+                        <MagnifyingGlassIcon />
+                      </TextField.Slot>
+                    </TextField.Root>
+                  </Box>
+
+                  {/* Filtered results - Scrollable area */}
+                  <Box style={{ flex: 1, overflowY: "auto", minHeight: 0 }}>
+                    {loadingSubjects ? (
+                      <Box p="3" style={{ textAlign: "center" }}>
+                        <Text size="2" color="gray">
+                          {t("common.loading")}
+                        </Text>
+                      </Box>
+                    ) : filteredSubjects.length === 0 ? (
+                      <Box p="3" style={{ textAlign: "center" }}>
+                        <Text size="2" color="gray">
+                          {subjectSearchQuery
+                            ? t("class.noSubjectsFound")
+                            : t("class.noSubjectsAvailable")}
+                        </Text>
+                      </Box>
+                    ) : (
+                      filteredSubjects.map((subject) => (
+                        <Select.Item key={subject.id} value={subject.id}>
+                          {subject.code} - {subject.name}
+                        </Select.Item>
+                      ))
+                    )}
+                  </Box>
                 </Select.Content>
               </Select.Root>
             </Box>
