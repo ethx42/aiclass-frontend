@@ -332,7 +332,10 @@ export default function ClassDetailPage() {
 
       {/* Content */}
       {user?.role === UserRole.TEACHER ? (
-        <TeacherClassView classId={classId} />
+        <TeacherClassView
+          classId={classId}
+          teacherRecommendation={classData?.teacherRecommendation}
+        />
       ) : (
         <StudentClassView
           classId={classId}

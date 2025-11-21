@@ -25,6 +25,7 @@ import {
   BarChartIcon,
   CalendarIcon,
   MagicWandIcon,
+  ChatBubbleIcon,
 } from "@radix-ui/react-icons";
 import { useAuthStore } from "@/src/lib/stores/auth-store";
 import { useGrades } from "@/src/lib/hooks/use-grades";
@@ -88,6 +89,9 @@ export function StudentClassView({
     null
   );
   const [isAssessmentModalOpen, setIsAssessmentModalOpen] = useState(false);
+  const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
+  const [selectedGradeForFeedback, setSelectedGradeForFeedback] =
+    useState<GradeResponse | null>(null);
 
   // Get recommendation for a specific assessment/grade - comes directly from the grade response
   const getAssessmentRecommendation = (grade: GradeResponse) => {
@@ -97,6 +101,31 @@ export function StudentClassView({
   const handleOpenAssessmentModal = (grade: GradeResponse) => {
     setSelectedGrade(grade);
     setIsAssessmentModalOpen(true);
+  };
+
+  const handleOpenFeedbackModal = (grade: GradeResponse) => {
+    setSelectedGradeForFeedback(grade);
+    setIsFeedbackModalOpen(true);
+  };
+
+  const hasFeedback = (grade: GradeResponse) => {
+    const metadata = grade.metadata;
+    if (!metadata) return false;
+    // Handle both object and string cases
+    if (typeof metadata === "string") {
+      try {
+        const parsed = JSON.parse(metadata);
+        return !!(parsed?.feedback || parsed?.teacherFeedback);
+      } catch {
+        return false;
+      }
+    }
+    if (typeof metadata !== "object" || Array.isArray(metadata)) {
+      return false;
+    }
+    const feedback = metadata.feedback;
+    const teacherFeedback = metadata.teacherFeedback;
+    return !!(feedback || teacherFeedback);
   };
 
   const handleGenerateAssessmentRecommendation = async (
@@ -273,6 +302,12 @@ export function StudentClassView({
                       </Table.ColumnHeaderCell>
                       <Table.ColumnHeaderCell style={{ width: "80px" }}>
                         <Flex align="center" gap="2">
+                          <ChatBubbleIcon width="14" height="14" />
+                          {t("grades.feedback")}
+                        </Flex>
+                      </Table.ColumnHeaderCell>
+                      <Table.ColumnHeaderCell style={{ width: "80px" }}>
+                        <Flex align="center" gap="2">
                           <MagicWandIcon width="14" height="14" />
                           {t("recommendations.aiRecommendations")}
                         </Flex>
@@ -391,6 +426,41 @@ export function StudentClassView({
                             </Table.Cell>
                             <Table.Cell style={{ textAlign: "center" }}>
                               {(() => {
+                                const feedbackExists = hasFeedback(grade);
+                                return feedbackExists ? (
+                                  <Flex justify="center">
+                                    <Tooltip content={t("grades.viewFeedback")}>
+                                      <IconButton
+                                        size="1"
+                                        variant="ghost"
+                                        onClick={() =>
+                                          handleOpenFeedbackModal(grade)
+                                        }
+                                        style={{
+                                          color: "var(--blue-9)",
+                                          cursor: "pointer",
+                                        }}
+                                      >
+                                        <ChatBubbleIcon
+                                          width="14"
+                                          height="14"
+                                        />
+                                      </IconButton>
+                                    </Tooltip>
+                                  </Flex>
+                                ) : (
+                                  <Text
+                                    size="1"
+                                    color="gray"
+                                    style={{ textAlign: "center" }}
+                                  >
+                                    -
+                                  </Text>
+                                );
+                              })()}
+                            </Table.Cell>
+                            <Table.Cell style={{ textAlign: "center" }}>
+                              {(() => {
                                 const hasRecommendation =
                                   getAssessmentRecommendation(grade);
                                 return (
@@ -400,12 +470,10 @@ export function StudentClassView({
                                         hasRecommendation
                                           ? t(
                                               "recommendations.viewRecommendation"
-                                            ) ||
-                                            "View AI recommendation for this assessment"
+                                            )
                                           : t(
                                               "recommendations.generateAssessmentRecommendation"
-                                            ) ||
-                                            "Generate AI recommendation for this assessment"
+                                            )
                                       }
                                     >
                                       <IconButton
@@ -758,6 +826,151 @@ export function StudentClassView({
                 </Flex>
 
                 <Flex justify="end" mt="3">
+                  <Dialog.Close>
+                    <Button variant="soft" color="gray" size="2">
+                      {t("common.close") || "Close"}
+                    </Button>
+                  </Dialog.Close>
+                </Flex>
+              </>
+            )}
+          </Dialog.Content>
+        </Dialog.Root>
+
+        {/* Teacher Feedback Modal */}
+        <Dialog.Root
+          open={isFeedbackModalOpen}
+          onOpenChange={setIsFeedbackModalOpen}
+        >
+          <Dialog.Content style={{ maxWidth: 650 }}>
+            {selectedGradeForFeedback && (
+              <>
+                <Dialog.Title>
+                  {selectedGradeForFeedback.assessmentName}
+                </Dialog.Title>
+                <Dialog.Description size="2" mb="3">
+                  {t("grades.assessmentDetails") ||
+                    "Assessment details and teacher feedback"}
+                </Dialog.Description>
+
+                <Flex direction="column" gap="4">
+                  {/* Assessment Information */}
+                  <Card size="2" style={{ padding: "12px" }}>
+                    <Grid columns="2" gap="3">
+                      <Box>
+                        <Text size="1" color="gray" mb="1">
+                          {t("grades.type")}:{" "}
+                        </Text>
+                        <Badge
+                          color={getAssessmentColor(
+                            selectedGradeForFeedback.assessmentKind
+                          )}
+                          style={{
+                            fontWeight: 600,
+                            fontSize: "10px",
+                            padding: "3px 8px",
+                          }}
+                        >
+                          {t(
+                            `grades.${selectedGradeForFeedback.assessmentKind.toLowerCase()}`
+                          )}
+                        </Badge>
+                      </Box>
+                      <Box>
+                        <Text size="1" color="gray" mb="1">
+                          {t("grades.date")}:{" "}
+                        </Text>
+                        <Text size="2" weight="medium">
+                          {new Date(
+                            selectedGradeForFeedback.gradedAt
+                          ).toLocaleDateString()}
+                        </Text>
+                      </Box>
+                      <Box>
+                        <Text size="1" color="gray" mb="1">
+                          {t("grades.score")}:{" "}
+                        </Text>
+                        <Text size="2" weight="bold">
+                          {selectedGradeForFeedback.score} /{" "}
+                          {selectedGradeForFeedback.maxScore}
+                        </Text>
+                      </Box>
+                      <Box>
+                        <Text size="1" color="gray" mb="1">
+                          {t("grades.percentage")}:{" "}
+                        </Text>
+                        <Badge
+                          color={getGradeColor(
+                            parseFloat(
+                              (
+                                (selectedGradeForFeedback.score /
+                                  selectedGradeForFeedback.maxScore) *
+                                100
+                              ).toFixed(1)
+                            )
+                          )}
+                          style={{
+                            fontWeight: 600,
+                            fontSize: "10px",
+                            padding: "3px 8px",
+                          }}
+                        >
+                          {(
+                            (selectedGradeForFeedback.score /
+                              selectedGradeForFeedback.maxScore) *
+                            100
+                          ).toFixed(1)}
+                          %
+                        </Badge>
+                      </Box>
+                    </Grid>
+                  </Card>
+
+                  {/* Assessment Content */}
+                  {selectedGradeForFeedback.metadata?.assessmentContent && (
+                    <Box>
+                      <Text size="2" weight="bold" mb="2">
+                        {t("grades.assessmentContent")}
+                      </Text>
+                      <Text
+                        size="2"
+                        color="gray"
+                        style={{ whiteSpace: "pre-wrap" }}
+                      >
+                        {selectedGradeForFeedback.metadata.assessmentContent}
+                      </Text>
+                    </Box>
+                  )}
+
+                  {/* Teacher Feedback */}
+                  <Box>
+                    <Flex align="center" gap="2" mb="2">
+                      <ChatBubbleIcon
+                        width="16"
+                        height="16"
+                        style={{ color: "var(--blue-11)" }}
+                      />
+                      <Text size="3" weight="bold">
+                        {t("grades.teacherFeedback")}
+                      </Text>
+                    </Flex>
+                    <Card
+                      size="2"
+                      style={{ padding: "16px", background: "var(--blue-2)" }}
+                    >
+                      <Text
+                        size="2"
+                        style={{ lineHeight: 1.6, whiteSpace: "pre-wrap" }}
+                      >
+                        {selectedGradeForFeedback.metadata?.teacherFeedback ||
+                          selectedGradeForFeedback.metadata?.feedback ||
+                          t("grades.noFeedback")}
+                      </Text>
+                    </Card>
+                  </Box>
+                </Flex>
+
+                <Flex gap="3" mt="4" justify="end">
                   <Dialog.Close>
                     <Button variant="soft" color="gray" size="2">
                       {t("common.close") || "Close"}

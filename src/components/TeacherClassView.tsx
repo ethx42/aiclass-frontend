@@ -46,6 +46,7 @@ import {
   CreateGradeDto,
   UpdateGradeDto,
   AiRecommendationResponse,
+  RecommendationAudience,
 } from "@/src/types/api";
 import { useT } from "@/src/lib/i18n/provider";
 import toast from "react-hot-toast";
@@ -53,6 +54,10 @@ import ReactMarkdown from "react-markdown";
 
 interface TeacherClassViewProps {
   classId: string;
+  teacherRecommendation?: {
+    id: string;
+    message: string;
+  } | null;
 }
 
 interface AssessmentFormData {
@@ -62,7 +67,10 @@ interface AssessmentFormData {
   assessmentContent?: string;
 }
 
-export function TeacherClassView({ classId }: TeacherClassViewProps) {
+export function TeacherClassView({
+  classId,
+  teacherRecommendation,
+}: TeacherClassViewProps) {
   const t = useT();
   const { data: enrollmentsData, isLoading: loadingEnrollments } =
     useEnrollments({
@@ -81,11 +89,23 @@ export function TeacherClassView({ classId }: TeacherClassViewProps) {
   const createGrade = useCreateGrade();
   const updateGrade = useUpdateGrade();
 
-  // AI Recommendations - Store generated recommendations in local state
-  const [classRecommendation, setClassRecommendation] =
-    useState<AiRecommendationResponse | null>(null);
+  // AI Recommendations - Use recommendation directly from class response
   const generateClassRecommendation = useGenerateClassRecommendation();
   const generateStudentRecommendation = useGenerateStudentRecommendation();
+
+  // Convert teacherRecommendation to AiRecommendationResponse format if it exists
+  const classRecommendation: AiRecommendationResponse | null =
+    teacherRecommendation
+      ? {
+          id: teacherRecommendation.id,
+          message: teacherRecommendation.message,
+          recipientId: "",
+          recipientName: "",
+          classId: classId,
+          audience: RecommendationAudience.TEACHER,
+          createdAt: "",
+        }
+      : null;
 
   const classRecommendations = classRecommendation ? [classRecommendation] : [];
 
@@ -447,14 +467,11 @@ export function TeacherClassView({ classId }: TeacherClassViewProps) {
 
     // Regular generation (no confirmation needed)
     try {
-      const response = await generateClassRecommendation.mutateAsync({
+      await generateClassRecommendation.mutateAsync({
         classId,
         forceRegenerate: false,
       });
-      // Store the generated recommendation in local state
-      if (response?.data) {
-        setClassRecommendation(response.data);
-      }
+      // The recommendation will be included in the class response when we refetch
       toast.success(t("recommendations.classRecommendationGenerated"));
     } catch (err) {
       console.error("Failed to generate recommendation:", err);
@@ -465,14 +482,11 @@ export function TeacherClassView({ classId }: TeacherClassViewProps) {
   const handleConfirmRegenerate = async () => {
     setShowRegenerateConfirmDialog(false);
     try {
-      const response = await generateClassRecommendation.mutateAsync({
+      await generateClassRecommendation.mutateAsync({
         classId,
         forceRegenerate: true,
       });
-      // Store the regenerated recommendation in local state
-      if (response?.data) {
-        setClassRecommendation(response.data);
-      }
+      // The recommendation will be included in the class response when we refetch
       toast.success(t("recommendations.classRecommendationRegenerated"));
     } catch (err) {
       console.error("Failed to regenerate recommendation:", err);

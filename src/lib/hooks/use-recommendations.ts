@@ -17,7 +17,8 @@ export const useGenerateClassRecommendation = () => {
         forceRegenerate || false
       ),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["recommendations"] });
+      // Invalidate classes query to refetch with updated teacherRecommendation
+      queryClient.invalidateQueries({ queryKey: ["classes"] });
     },
   });
 };

@@ -136,6 +136,10 @@ export interface ClassResponse {
   groupCode: string;
   schedule?: string;
   metadata?: Record<string, any>;
+  teacherRecommendation?: {
+    id: string;
+    message: string;
+  } | null;
   createdAt: string;
   updatedAt: string;
 }
