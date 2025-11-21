@@ -34,7 +34,16 @@ export default function SignupPage() {
   });
 
   const [error, setError] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [confirmPasswordError, setConfirmPasswordError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+
+  // Email validation function
+  const validateEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
 
   // Initialize auth state from localStorage on mount
   useEffect(() => {
@@ -48,9 +57,39 @@ export default function SignupPage() {
     }
   }, [isAuthenticated, router]);
 
+  const handleEmailChange = (value: string) => {
+    setFormData({ ...formData, email: value });
+    if (value && !validateEmail(value)) {
+      setEmailError(t("auth.invalidEmail") || "Please enter a valid email address");
+    } else {
+      setEmailError("");
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setEmailError("");
+    setPasswordError("");
+    setConfirmPasswordError("");
+
+    // Validate email format
+    if (!formData.email || !validateEmail(formData.email)) {
+      setEmailError(t("auth.invalidEmail") || "Please enter a valid email address");
+      return;
+    }
+
+    // Validate password is not empty
+    if (!formData.password || formData.password.trim() === "") {
+      setPasswordError(t("auth.passwordRequired") || "Password is required");
+      return;
+    }
+
+    // Validate confirm password is not empty
+    if (!formData.confirmPassword || formData.confirmPassword.trim() === "") {
+      setConfirmPasswordError(t("auth.confirmPasswordRequired") || "Please confirm your password");
+      return;
+    }
 
     // Validation
     if (formData.password !== formData.confirmPassword) {
@@ -59,7 +98,7 @@ export default function SignupPage() {
     }
 
     if (formData.password.length < 6) {
-      setError(t("auth.passwordMinLength"));
+      setPasswordError(t("auth.passwordMinLength"));
       return;
     }
 
@@ -144,11 +183,20 @@ export default function SignupPage() {
                     type="email"
                     placeholder="your.email@example.com"
                     value={formData.email}
-                    onChange={(e) =>
-                      setFormData({ ...formData, email: e.target.value })
-                    }
+                    onChange={(e) => handleEmailChange(e.target.value)}
+                    onBlur={() => {
+                      if (formData.email && !validateEmail(formData.email)) {
+                        setEmailError(t("auth.invalidEmail") || "Please enter a valid email address");
+                      }
+                    }}
                     required
+                    color={emailError ? "red" : undefined}
                   />
+                  {emailError && (
+                    <Text size="1" color="red" mt="1">
+                      {emailError}
+                    </Text>
+                  )}
                 </Box>
 
                 {/* Role */}
@@ -184,12 +232,30 @@ export default function SignupPage() {
                     type="password"
                     placeholder={t("auth.passwordMinLength")}
                     value={formData.password}
-                    onChange={(e) =>
-                      setFormData({ ...formData, password: e.target.value })
-                    }
+                    onChange={(e) => {
+                      setFormData({ ...formData, password: e.target.value });
+                      if (e.target.value && e.target.value.trim() !== "") {
+                        setPasswordError("");
+                      }
+                    }}
+                    onBlur={() => {
+                      if (!formData.password || formData.password.trim() === "") {
+                        setPasswordError(t("auth.passwordRequired") || "Password is required");
+                      } else if (formData.password.length < 6) {
+                        setPasswordError(t("auth.passwordMinLength"));
+                      } else {
+                        setPasswordError("");
+                      }
+                    }}
                     required
                     minLength={6}
+                    color={passwordError ? "red" : undefined}
                   />
+                  {passwordError && (
+                    <Text size="1" color="red" mt="1">
+                      {passwordError}
+                    </Text>
+                  )}
                 </Box>
 
                 {/* Confirm Password */}
@@ -201,15 +267,37 @@ export default function SignupPage() {
                     type="password"
                     placeholder={t("auth.confirmPassword")}
                     value={formData.confirmPassword}
-                    onChange={(e) =>
+                    onChange={(e) => {
                       setFormData({
                         ...formData,
                         confirmPassword: e.target.value,
-                      })
-                    }
+                      });
+                      if (e.target.value && e.target.value.trim() !== "") {
+                        setConfirmPasswordError("");
+                        // Also clear password mismatch error if passwords match
+                        if (formData.password === e.target.value) {
+                          setError("");
+                        }
+                      }
+                    }}
+                    onBlur={() => {
+                      if (!formData.confirmPassword || formData.confirmPassword.trim() === "") {
+                        setConfirmPasswordError(t("auth.confirmPasswordRequired") || "Please confirm your password");
+                      } else if (formData.password !== formData.confirmPassword) {
+                        setConfirmPasswordError(t("auth.passwordsDontMatch"));
+                      } else {
+                        setConfirmPasswordError("");
+                      }
+                    }}
                     required
                     minLength={6}
+                    color={confirmPasswordError ? "red" : undefined}
                   />
+                  {confirmPasswordError && (
+                    <Text size="1" color="red" mt="1">
+                      {confirmPasswordError}
+                    </Text>
+                  )}
                 </Box>
 
                 <Button type="submit" size="3" disabled={isLoading}>

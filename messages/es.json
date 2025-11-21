@@ -36,6 +36,9 @@
     "creatingAccount": "Creando Cuenta...",
     "signupSuccess": "¡Cuenta creada exitosamente! Por favor inicia sesión.",
     "invalidCredentials": "Credenciales inválidas",
+    "invalidEmail": "Por favor ingresa un correo electrónico válido",
+    "passwordRequired": "La contraseña es requerida",
+    "confirmPasswordRequired": "Por favor confirma tu contraseña",
     "passwordsDontMatch": "Las contraseñas no coinciden",
     "passwordMinLength": "La contraseña debe tener al menos 6 caracteres",
     "iAmA": "Soy un"
