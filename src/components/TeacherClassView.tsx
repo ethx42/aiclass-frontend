@@ -1599,7 +1599,7 @@ export function TeacherClassView({
                 {/* Content - Animated */}
                 <Box
                   style={{
-                    maxHeight: isRecommendationsExpanded ? "2000px" : "0",
+                    maxHeight: isRecommendationsExpanded ? "auto" : "0",
                     overflow: "hidden",
                     transition:
                       "max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease",
