@@ -21,8 +21,6 @@ import {
   PlusIcon,
   InfoCircledIcon,
   Pencil1Icon,
-  CheckIcon,
-  Cross2Icon,
   PersonIcon,
   FileTextIcon,
   BarChartIcon,
@@ -108,7 +106,17 @@ export function TeacherClassView({ classId }: TeacherClassViewProps) {
   const [isAddAssessmentDialogOpen, setIsAddAssessmentDialogOpen] =
     useState(false);
   const [isEditGradeDialogOpen, setIsEditGradeDialogOpen] = useState(false);
+  const [isEditAssessmentDialogOpen, setIsEditAssessmentDialogOpen] =
+    useState(false);
   const [editingGrade, setEditingGrade] = useState<GradeResponse | null>(null);
+  const [editingAssessment, setEditingAssessment] = useState<{
+    originalAssessmentKind: AssessmentKind;
+    originalAssessmentName: string;
+    assessmentKind: AssessmentKind;
+    assessmentName: string;
+    maxScore: number;
+    assessmentContent?: string;
+  } | null>(null);
   const [editingCell, setEditingCell] = useState<{
     studentId: string;
     assessment: string;
@@ -286,6 +294,94 @@ export function TeacherClassView({ classId }: TeacherClassViewProps) {
     setEditingCell(null);
     setNewScore("");
     setNewFeedback("");
+  };
+
+  const handleEditAssessment = (assessment: string) => {
+    const [kind, name] = assessment.split(":");
+    const assessmentGrades = grades.filter(
+      (g) => g.assessmentKind === kind && g.assessmentName === name
+    );
+
+    if (assessmentGrades.length === 0) return;
+
+    const firstGrade = assessmentGrades[0];
+    setEditingAssessment({
+      originalAssessmentKind: firstGrade.assessmentKind,
+      originalAssessmentName: firstGrade.assessmentName,
+      assessmentKind: firstGrade.assessmentKind,
+      assessmentName: firstGrade.assessmentName,
+      maxScore: firstGrade.maxScore,
+      assessmentContent: firstGrade.metadata?.assessmentContent || "",
+    });
+    setIsEditAssessmentDialogOpen(true);
+  };
+
+  const handleSaveAssessment = async () => {
+    if (!editingAssessment) return;
+    setError("");
+
+    if (!editingAssessment.assessmentName.trim()) {
+      setError("Assessment name is required");
+      return;
+    }
+
+    try {
+      // Find all grades for this assessment using ORIGINAL name/kind
+      // This is important because the user might have changed the name
+      const assessmentGrades = grades.filter(
+        (g) =>
+          g.assessmentKind === editingAssessment.originalAssessmentKind &&
+          g.assessmentName === editingAssessment.originalAssessmentName
+      );
+
+      // Update all grades for this assessment
+      const updatePromises = assessmentGrades.map((grade) => {
+        const updateData: Partial<UpdateGradeDto> = {
+          assessmentKind: editingAssessment.assessmentKind,
+          assessmentName: editingAssessment.assessmentName,
+          maxScore: editingAssessment.maxScore,
+        };
+
+        // Always update metadata with assessmentContent
+        // Preserve existing metadata (like feedback) and update/remove assessmentContent
+        if (editingAssessment.assessmentContent?.trim()) {
+          updateData.metadata = {
+            ...grade.metadata,
+            assessmentContent: editingAssessment.assessmentContent.trim(),
+          };
+        } else {
+          // If assessmentContent is empty, remove it but keep other metadata
+          if (grade.metadata) {
+            const { assessmentContent, ...restMetadata } = grade.metadata;
+            updateData.metadata =
+              Object.keys(restMetadata).length > 0 ? restMetadata : undefined;
+          }
+        }
+
+        return updateGrade.mutateAsync({
+          id: grade.id,
+          data: updateData,
+        });
+      });
+
+      await Promise.all(updatePromises);
+      setIsEditAssessmentDialogOpen(false);
+      setEditingAssessment(null);
+      toast.success(t("grades.assessmentUpdated"));
+    } catch (err) {
+      console.error("Failed to update assessment:", err);
+      const errorMessage =
+        (err as { response?: { data?: { message?: string } } })?.response?.data
+          ?.message || t("grades.failedToUpdateAssessment");
+      setError(errorMessage);
+      toast.error(errorMessage);
+    }
+  };
+
+  const handleCancelEditAssessment = () => {
+    setIsEditAssessmentDialogOpen(false);
+    setEditingAssessment(null);
+    setError("");
   };
 
   // Group grades by student
@@ -561,11 +657,20 @@ export function TeacherClassView({ classId }: TeacherClassViewProps) {
                         {t("grades.score")} *
                       </Text>
                       <TextField.Root
-                        type="number"
+                        type="text"
+                        inputMode="numeric"
+                        pattern="\d*"
+                        maxLength={4}
                         value={editScore}
-                        onChange={(e) => setEditScore(e.target.value)}
-                        min="0"
-                        step="0.1"
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          if (value === "" || /^\d*\.?\d*$/.test(value)) {
+                            const digitCount = value.replace(/\./g, "").length;
+                            if (digitCount <= 3) {
+                              setEditScore(value);
+                            }
+                          }
+                        }}
                         required
                       />
                     </Box>
@@ -614,6 +719,164 @@ export function TeacherClassView({ classId }: TeacherClassViewProps) {
                       <Button
                         onClick={handleSaveEdit}
                         disabled={updateGrade.isPending || !editScore}
+                        className="w-full sm:w-auto"
+                      >
+                        {updateGrade.isPending
+                          ? t("common.saving")
+                          : t("common.save")}
+                      </Button>
+                    </Flex>
+                  </Flex>
+                </Dialog.Content>
+              </Dialog.Root>
+
+              {/* Edit Assessment Dialog */}
+              <Dialog.Root
+                open={isEditAssessmentDialogOpen}
+                onOpenChange={setIsEditAssessmentDialogOpen}
+              >
+                <Dialog.Content style={{ maxWidth: 500 }}>
+                  <Dialog.Title>{t("grades.editAssessment")}</Dialog.Title>
+                  <Dialog.Description size="2" mb="4">
+                    {t("grades.editAssessmentDescription")}
+                  </Dialog.Description>
+
+                  <Flex direction="column" gap="3">
+                    {error && (
+                      <Callout.Root color="red" size="1">
+                        <Callout.Icon>
+                          <InfoCircledIcon />
+                        </Callout.Icon>
+                        <Callout.Text>{error}</Callout.Text>
+                      </Callout.Root>
+                    )}
+
+                    <Box>
+                      <Text as="label" size="2" weight="bold" mb="1">
+                        {t("grades.assessmentType")} *
+                      </Text>
+                      <Select.Root
+                        value={editingAssessment?.assessmentKind}
+                        onValueChange={(value) =>
+                          setEditingAssessment({
+                            ...editingAssessment!,
+                            assessmentKind: value as AssessmentKind,
+                          })
+                        }
+                      >
+                        <Select.Trigger style={{ width: "100%" }} />
+                        <Select.Content>
+                          <Select.Item value={AssessmentKind.EXAM}>
+                            {t("grades.exam")}
+                          </Select.Item>
+                          <Select.Item value={AssessmentKind.QUIZ}>
+                            {t("grades.quiz")}
+                          </Select.Item>
+                          <Select.Item value={AssessmentKind.HOMEWORK}>
+                            {t("grades.homework")}
+                          </Select.Item>
+                          <Select.Item value={AssessmentKind.PROJECT}>
+                            {t("grades.project")}
+                          </Select.Item>
+                        </Select.Content>
+                      </Select.Root>
+                    </Box>
+
+                    <Box>
+                      <Text as="label" size="2" weight="bold" mb="1">
+                        {t("grades.assessmentName")} *
+                      </Text>
+                      <TextField.Root
+                        placeholder="e.g., Midterm Exam"
+                        value={editingAssessment?.assessmentName || ""}
+                        onChange={(e) =>
+                          setEditingAssessment({
+                            ...editingAssessment!,
+                            assessmentName: e.target.value,
+                          })
+                        }
+                      />
+                    </Box>
+
+                    <Box>
+                      <Text as="label" size="2" weight="bold" mb="1">
+                        {t("grades.maxScore")} *
+                      </Text>
+                      <TextField.Root
+                        type="number"
+                        value={editingAssessment?.maxScore?.toString() || "100"}
+                        onChange={(e) =>
+                          setEditingAssessment({
+                            ...editingAssessment!,
+                            maxScore: parseFloat(e.target.value) || 100,
+                          })
+                        }
+                        min="1"
+                        step="0.1"
+                      />
+                    </Box>
+
+                    <Box>
+                      <Text as="label" size="2" weight="bold" mb="1">
+                        {t("grades.assessmentContent")}
+                      </Text>
+                      <textarea
+                        placeholder={t("grades.assessmentContentPlaceholder")}
+                        value={editingAssessment?.assessmentContent || ""}
+                        onChange={(e) =>
+                          setEditingAssessment({
+                            ...editingAssessment!,
+                            assessmentContent: e.target.value,
+                          })
+                        }
+                        rows={4}
+                        style={{
+                          width: "100%",
+                          padding: "8px 12px",
+                          borderRadius: "6px",
+                          border: "1px solid var(--gray-6)",
+                          fontSize: "14px",
+                          fontFamily: "inherit",
+                          resize: "vertical",
+                          minHeight: "80px",
+                        }}
+                      />
+                      <Text size="1" color="gray" mt="1">
+                        {t("grades.assessmentContentHint")}
+                      </Text>
+                    </Box>
+
+                    <Callout.Root color="blue" size="1">
+                      <Callout.Icon>
+                        <InfoCircledIcon />
+                      </Callout.Icon>
+                      <Callout.Text>
+                        {t("grades.editAssessmentHint")}
+                      </Callout.Text>
+                    </Callout.Root>
+
+                    <Flex
+                      direction={{ initial: "column", sm: "row" }}
+                      gap="3"
+                      justify="end"
+                      mt="2"
+                    >
+                      <Dialog.Close>
+                        <Button
+                          variant="soft"
+                          color="gray"
+                          onClick={handleCancelEditAssessment}
+                          className="w-full sm:w-auto"
+                        >
+                          {t("common.cancel")}
+                        </Button>
+                      </Dialog.Close>
+                      <Button
+                        onClick={handleSaveAssessment}
+                        disabled={
+                          updateGrade.isPending ||
+                          !editingAssessment?.assessmentName?.trim()
+                        }
                         className="w-full sm:w-auto"
                       >
                         {updateGrade.isPending
@@ -769,23 +1032,46 @@ export function TeacherClassView({ classId }: TeacherClassViewProps) {
 
                         return (
                           <Table.ColumnHeaderCell key={assessment}>
-                            {assessmentContent ? (
-                              <Tooltip content={assessmentContent}>
+                            <Flex
+                              align="center"
+                              justify="between"
+                              gap="2"
+                              style={{ width: "100%" }}
+                            >
+                              {assessmentContent ? (
+                                <Tooltip content={assessmentContent}>
+                                  <Flex
+                                    align="center"
+                                    gap="2"
+                                    style={{ cursor: "help", flex: 1 }}
+                                  >
+                                    <FileTextIcon width="14" height="14" />
+                                    <Text>{assessmentName}</Text>
+                                  </Flex>
+                                </Tooltip>
+                              ) : (
                                 <Flex
                                   align="center"
                                   gap="2"
-                                  style={{ cursor: "help" }}
+                                  style={{ flex: 1 }}
                                 >
                                   <FileTextIcon width="14" height="14" />
-                                  {assessmentName}
+                                  <Text>{assessmentName}</Text>
                                 </Flex>
-                              </Tooltip>
-                            ) : (
-                              <Flex align="center" gap="2">
-                                <FileTextIcon width="14" height="14" />
-                                {assessmentName}
-                              </Flex>
-                            )}
+                              )}
+                              <IconButton
+                                size="1"
+                                variant="ghost"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleEditAssessment(assessment);
+                                }}
+                                style={{ flexShrink: 0 }}
+                                title={t("grades.editAssessment")}
+                              >
+                                <Pencil1Icon width="12" height="12" />
+                              </IconButton>
+                            </Flex>
                           </Table.ColumnHeaderCell>
                         );
                       })}

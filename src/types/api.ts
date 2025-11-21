@@ -95,6 +95,20 @@ export enum Semester {
   WINTER = "WINTER",
 }
 
+// Helper function to get semester display value in UI
+// Verano (SUMMER) -> "A", Invierno (WINTER) -> "B"
+export const getSemesterDisplay = (semester: Semester): string => {
+  switch (semester) {
+    case Semester.SUMMER:
+      return "A";
+    case Semester.WINTER:
+      return "B";
+    default:
+      // Fallback para semestres antiguos que puedan existir
+      return semester === Semester.SPRING ? "A" : semester === Semester.FALL ? "B" : "A";
+  }
+};
+
 export interface Class {
   id: string;
   subject: Subject;

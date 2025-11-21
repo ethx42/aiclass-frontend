@@ -34,7 +34,7 @@ export default function CreateClassPage() {
   const [formData, setFormData] = useState({
     subjectId: "",
     year: new Date().getFullYear(),
-    semester: Semester.SPRING,
+    semester: Semester.SUMMER,
     groupCode: "",
     schedule: "",
   });
@@ -231,18 +231,8 @@ export default function CreateClassPage() {
                   >
                     <Select.Trigger style={{ width: "100%" }} />
                     <Select.Content>
-                      <Select.Item value={Semester.SPRING}>
-                        {t("class.spring")}
-                      </Select.Item>
-                      <Select.Item value={Semester.SUMMER}>
-                        {t("class.summer")}
-                      </Select.Item>
-                      <Select.Item value={Semester.FALL}>
-                        {t("class.fall")}
-                      </Select.Item>
-                      <Select.Item value={Semester.WINTER}>
-                        {t("class.winter")}
-                      </Select.Item>
+                      <Select.Item value={Semester.SUMMER}>A</Select.Item>
+                      <Select.Item value={Semester.WINTER}>B</Select.Item>
                     </Select.Content>
                   </Select.Root>
                 </Box>
@@ -265,7 +255,7 @@ export default function CreateClassPage() {
                 {/* Schedule */}
                 <Box>
                   <Text as="label" size="2" weight="bold" mb="1">
-                    {t("class.schedule")} ({t("class.optional")})
+                    {t("class.schedule")}*
                   </Text>
                   <TextField.Root
                     placeholder={t("class.schedulePlaceholder")}
@@ -273,6 +263,7 @@ export default function CreateClassPage() {
                     onChange={(e) =>
                       setFormData({ ...formData, schedule: e.target.value })
                     }
+                    required
                   />
                 </Box>
 

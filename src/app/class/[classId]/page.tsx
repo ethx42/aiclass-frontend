@@ -32,7 +32,7 @@ import {
 } from "@/src/lib/hooks/use-classes";
 import { useSubjects } from "@/src/lib/hooks/use-subjects";
 import { useEnrollments } from "@/src/lib/hooks/use-enrollments";
-import { UserRole, Semester, ClassResponse } from "@/src/types/api";
+import { UserRole, Semester, ClassResponse, getSemesterDisplay } from "@/src/types/api";
 import { TeacherClassView } from "@/src/components/TeacherClassView";
 import { StudentClassView } from "@/src/components/StudentClassView";
 import { useT } from "@/src/lib/i18n/provider";
@@ -83,7 +83,7 @@ export default function ClassDetailPage() {
   const [formData, setFormData] = useState({
     subjectId: "",
     year: 0,
-    semester: Semester.SPRING,
+    semester: Semester.SUMMER,
     groupCode: "",
     schedule: "",
   });
@@ -107,7 +107,7 @@ export default function ClassDetailPage() {
         teacherId: enrollment.teacherId || "",
         teacherName: enrollment.teacherName || "",
         year: enrollment.year || new Date().getFullYear(),
-        semester: enrollment.semester || Semester.FALL,
+        semester: enrollment.semester || Semester.SUMMER,
         groupCode: enrollment.groupCode || "",
         schedule: enrollment.schedule,
         metadata: undefined,
@@ -249,7 +249,7 @@ export default function ClassDetailPage() {
                 style={{ fontSize: "14px", color: "var(--gray-11)" }}
               >
                 <span>
-                  {t(`class.${classData.semester?.toLowerCase() || "fall"}`)}{" "}
+                  {getSemesterDisplay(classData.semester || Semester.SUMMER)}{" "}
                   {classData.year}
                 </span>
                 <span className="hidden sm:inline">•</span>
@@ -450,17 +450,11 @@ export default function ClassDetailPage() {
               >
                 <Select.Trigger style={{ width: "100%" }} />
                 <Select.Content>
-                  <Select.Item value={Semester.SPRING}>
-                    {t("class.spring")}
-                  </Select.Item>
                   <Select.Item value={Semester.SUMMER}>
-                    {t("class.summer")}
-                  </Select.Item>
-                  <Select.Item value={Semester.FALL}>
-                    {t("class.fall")}
+                    A
                   </Select.Item>
                   <Select.Item value={Semester.WINTER}>
-                    {t("class.winter")}
+                    B
                   </Select.Item>
                 </Select.Content>
               </Select.Root>

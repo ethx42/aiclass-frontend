@@ -1,7 +1,7 @@
 "use client";
 
 import { Card, Flex, Heading, Text, Badge, Box } from "@radix-ui/themes";
-import { ClassResponse, Semester } from "@/src/types/api";
+import { ClassResponse, Semester, getSemesterDisplay } from "@/src/types/api";
 import Link from "next/link";
 import { useT } from "@/src/lib/i18n/provider";
 import {
@@ -90,7 +90,8 @@ export function ClassCard({ classData }: ClassCardProps) {
           border: "1px solid var(--gray-4)",
           position: "relative",
           overflow: "hidden",
-          boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05)",
+          boxShadow:
+            "0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05)",
         }}
         className="class-card"
       >
@@ -102,12 +103,14 @@ export function ClassCard({ classData }: ClassCardProps) {
             right: 0,
             width: "120px",
             height: "120px",
-            background: `radial-gradient(circle at top right, ${getSemesterAccentColor(classData?.semester)}, transparent 70%)`,
+            background: `radial-gradient(circle at top right, ${getSemesterAccentColor(
+              classData?.semester
+            )}, transparent 70%)`,
             opacity: 0.6,
             pointerEvents: "none",
           }}
         />
-        
+
         {/* Subtle border accent */}
         <Box
           style={{
@@ -122,7 +125,11 @@ export function ClassCard({ classData }: ClassCardProps) {
           }}
         />
 
-        <Flex direction="column" gap="4" style={{ position: "relative", zIndex: 1, padding: "1px" }}>
+        <Flex
+          direction="column"
+          gap="4"
+          style={{ position: "relative", zIndex: 1, padding: "1px" }}
+        >
           <Flex justify="between" align="start" gap="3">
             <Box style={{ flex: 1, minWidth: 0 }}>
               <Flex align="center" gap="3" mb="3">
@@ -136,17 +143,24 @@ export function ClassCard({ classData }: ClassCardProps) {
                     alignItems: "center",
                     justifyContent: "center",
                     boxShadow: "0 2px 8px rgba(0, 0, 0, 0.08)",
-                    border: `1px solid ${getSemesterAccentColor(classData?.semester)}`,
-                    transition: "transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)",
+                    border: `1px solid ${getSemesterAccentColor(
+                      classData?.semester
+                    )}`,
+                    transition:
+                      "transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)",
                   }}
                 >
-                  <FileTextIcon width="18" height="18" style={{ color: "var(--gray-12)" }} />
+                  <FileTextIcon
+                    width="18"
+                    height="18"
+                    style={{ color: "var(--gray-12)" }}
+                  />
                 </Box>
                 <Box style={{ flex: 1, minWidth: 0 }}>
-                  <Heading 
-                    size="4" 
-                    style={{ 
-                      fontWeight: 700, 
+                  <Heading
+                    size="4"
+                    style={{
+                      fontWeight: 700,
                       letterSpacing: "-0.02em",
                       lineHeight: 1.2,
                       marginBottom: "4px",
@@ -154,10 +168,10 @@ export function ClassCard({ classData }: ClassCardProps) {
                   >
                     {classData?.subjectCode}
                   </Heading>
-                  <Text 
-                    size="2" 
-                    color="gray" 
-                    style={{ 
+                  <Text
+                    size="2"
+                    color="gray"
+                    style={{
                       lineHeight: 1.5,
                       fontWeight: 400,
                       opacity: 0.85,
@@ -171,8 +185,8 @@ export function ClassCard({ classData }: ClassCardProps) {
             <Badge
               color={getSemesterColor(classData?.semester)}
               size="2"
-              style={{ 
-                flexShrink: 0, 
+              style={{
+                flexShrink: 0,
                 fontWeight: 600,
                 fontSize: "11px",
                 padding: "6px 10px",
@@ -180,15 +194,15 @@ export function ClassCard({ classData }: ClassCardProps) {
                 textTransform: "capitalize",
               }}
             >
-              {t(`class.${classData?.semester?.toLowerCase() || "fall"}`)}{" "}
-              {classData?.year}
+              {getSemesterDisplay(classData?.semester)} {classData?.year}
             </Badge>
           </Flex>
 
           <Box
             style={{
               height: "1px",
-              background: "linear-gradient(90deg, transparent, var(--gray-4), transparent)",
+              background:
+                "linear-gradient(90deg, transparent, var(--gray-4), transparent)",
               margin: "4px 0",
             }}
           />
@@ -210,9 +224,21 @@ export function ClassCard({ classData }: ClassCardProps) {
                 >
                   <ShadowInnerIcon width="12" height="12" />
                 </Box>
-                <Text size="2" color="gray" style={{ display: "flex", alignItems: "center", gap: "6px", fontWeight: 500 }}>
+                <Text
+                  size="2"
+                  color="gray"
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    fontWeight: 500,
+                  }}
+                >
                   {t("class.group")}:{" "}
-                  <Text weight="bold" style={{ color: "var(--gray-12)", fontWeight: 600 }}>
+                  <Text
+                    weight="bold"
+                    style={{ color: "var(--gray-12)", fontWeight: 600 }}
+                  >
                     {classData?.groupCode}
                   </Text>
                 </Text>
@@ -257,7 +283,11 @@ export function ClassCard({ classData }: ClassCardProps) {
                 >
                   <PersonIcon width="12" height="12" />
                 </Box>
-                <Text size="2" color="gray" style={{ fontStyle: "italic", fontWeight: 500, opacity: 0.9 }}>
+                <Text
+                  size="2"
+                  color="gray"
+                  style={{ fontStyle: "italic", fontWeight: 500, opacity: 0.9 }}
+                >
                   {classData?.teacherName}
                 </Text>
               </Flex>
