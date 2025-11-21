@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   Box,
@@ -19,10 +19,12 @@ import { UserRole } from "@/src/types/api";
 import Link from "next/link";
 import { LanguageSelector } from "@/src/components/LanguageSelector";
 import { useT } from "@/src/lib/i18n/provider";
+import { useAuth } from "@/src/lib/hooks/use-auth";
 
 export default function SignupPage() {
   const router = useRouter();
   const t = useT();
+  const { isAuthenticated, initializeAuth } = useAuth();
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
@@ -33,6 +35,18 @@ export default function SignupPage() {
 
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+
+  // Initialize auth state from localStorage on mount
+  useEffect(() => {
+    initializeAuth();
+  }, [initializeAuth]);
+
+  // Redirect to dashboard if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.replace('/dashboard');
+    }
+  }, [isAuthenticated, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

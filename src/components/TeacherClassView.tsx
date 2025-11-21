@@ -127,7 +127,9 @@ export function TeacherClassView({ classId }: TeacherClassViewProps) {
   const [newFeedback, setNewFeedback] = useState("");
   const [error, setError] = useState("");
   const [isRecommendationsExpanded, setIsRecommendationsExpanded] =
-    useState(true);
+    useState(false);
+  const [showRegenerateConfirmDialog, setShowRegenerateConfirmDialog] =
+    useState(false);
 
   const [assessmentFormData, setAssessmentFormData] =
     useState<AssessmentFormData>({
@@ -144,7 +146,7 @@ export function TeacherClassView({ classId }: TeacherClassViewProps) {
     setError("");
 
     if (!assessmentFormData.assessmentName.trim()) {
-      setError("Assessment name is required");
+      setError(t("grades.assessmentNameRequired"));
       return;
     }
 
@@ -152,7 +154,7 @@ export function TeacherClassView({ classId }: TeacherClassViewProps) {
     // This creates the column in the gradebook
     const firstStudent = enrollments[0];
     if (!firstStudent) {
-      setError("No students enrolled");
+      setError(t("grades.noStudentsEnrolledError"));
       return;
     }
 
@@ -321,7 +323,7 @@ export function TeacherClassView({ classId }: TeacherClassViewProps) {
     setError("");
 
     if (!editingAssessment.assessmentName.trim()) {
-      setError("Assessment name is required");
+      setError(t("grades.assessmentNameRequired"));
       return;
     }
 
@@ -352,6 +354,7 @@ export function TeacherClassView({ classId }: TeacherClassViewProps) {
         } else {
           // If assessmentContent is empty, remove it but keep other metadata
           if (grade.metadata) {
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const { assessmentContent, ...restMetadata } = grade.metadata;
             updateData.metadata =
               Object.keys(restMetadata).length > 0 ? restMetadata : undefined;
@@ -399,6 +402,34 @@ export function TeacherClassView({ classId }: TeacherClassViewProps) {
     new Set(grades.map((g) => `${g.assessmentKind}:${g.assessmentName}`))
   );
 
+  // Calculate overall class average
+  const calculateClassAverage = (): number | null => {
+    if (grades.length === 0 || enrollments.length === 0) return null;
+
+    const studentAverages: number[] = [];
+
+    enrollments.forEach((enrollment) => {
+      const studentGrades = gradesByStudent[enrollment.studentId] || [];
+      if (studentGrades.length > 0) {
+        const average =
+          studentGrades.reduce(
+            (sum, g) => sum + (g.score / g.maxScore) * 100,
+            0
+          ) / studentGrades.length;
+        studentAverages.push(average);
+      }
+    });
+
+    if (studentAverages.length === 0) return null;
+
+    const classAverage =
+      studentAverages.reduce((sum, avg) => sum + avg, 0) /
+      studentAverages.length;
+    return classAverage;
+  };
+
+  const classAverage = calculateClassAverage();
+
   // Helper function to get assessment content for a given assessment
   const getAssessmentContent = (assessment: string): string | null => {
     const [kind, name] = assessment.split(":");
@@ -422,20 +453,39 @@ export function TeacherClassView({ classId }: TeacherClassViewProps) {
   const handleGenerateClassRecommendation = async (
     forceRegenerate: boolean = false
   ) => {
+    // If force regenerate, show confirmation dialog first
+    if (forceRegenerate) {
+      setShowRegenerateConfirmDialog(true);
+      return;
+    }
+
+    // Regular generation (no confirmation needed)
     try {
       await generateClassRecommendation.mutateAsync({
         classId,
-        forceRegenerate,
+        forceRegenerate: false,
       });
       // Refetch recommendations to show the newly generated one
       await refetchRecommendations();
-      toast.success(
-        forceRegenerate
-          ? t("recommendations.classRecommendationRegenerated")
-          : t("recommendations.classRecommendationGenerated")
-      );
+      toast.success(t("recommendations.classRecommendationGenerated"));
     } catch (err) {
       console.error("Failed to generate recommendation:", err);
+      toast.error(t("recommendations.failedToGenerate"));
+    }
+  };
+
+  const handleConfirmRegenerate = async () => {
+    setShowRegenerateConfirmDialog(false);
+    try {
+      await generateClassRecommendation.mutateAsync({
+        classId,
+        forceRegenerate: true,
+      });
+      // Refetch recommendations to show the newly generated one
+      await refetchRecommendations();
+      toast.success(t("recommendations.classRecommendationRegenerated"));
+    } catch (err) {
+      console.error("Failed to regenerate recommendation:", err);
       toast.error(t("recommendations.failedToGenerate"));
     }
   };
@@ -457,9 +507,42 @@ export function TeacherClassView({ classId }: TeacherClassViewProps) {
                   {t("grades.gradebook")}
                 </Text>
                 <br />
-                <Text size={{ initial: "2", sm: "2" }} color="gray">
-                  {enrollments.length} {t("grades.studentsEnrolled")} ·{" "}
-                </Text>
+                <Flex align="center" gap="2" wrap="wrap">
+                  <Text size={{ initial: "2", sm: "2" }} color="gray">
+                    {enrollments.length} {t("grades.studentsEnrolled")}
+                  </Text>
+                  {classAverage !== null && (
+                    <>
+                      <Text size={{ initial: "2", sm: "2" }} color="gray">
+                        ·
+                      </Text>
+                      <Flex align="center" gap="2">
+                        <BarChartIcon width="14" height="14" />
+                        <Text size={{ initial: "2", sm: "2" }} weight="medium">
+                          {t("grades.classAverage")}:{" "}
+                        </Text>
+                        <Badge
+                          color={
+                            classAverage >= 90
+                              ? "green"
+                              : classAverage >= 80
+                              ? "blue"
+                              : classAverage >= 70
+                              ? "orange"
+                              : "red"
+                          }
+                          style={{
+                            fontWeight: 600,
+                            fontSize: "12px",
+                            padding: "2px 8px",
+                          }}
+                        >
+                          {classAverage.toFixed(1)}%
+                        </Badge>
+                      </Flex>
+                    </>
+                  )}
+                </Flex>
               </Box>
               <Dialog.Root
                 open={isAddAssessmentDialogOpen}
@@ -888,6 +971,73 @@ export function TeacherClassView({ classId }: TeacherClassViewProps) {
                 </Dialog.Content>
               </Dialog.Root>
 
+              {/* Regenerate Recommendation Confirmation Dialog */}
+              <Dialog.Root
+                open={showRegenerateConfirmDialog}
+                onOpenChange={setShowRegenerateConfirmDialog}
+              >
+                <Dialog.Content style={{ maxWidth: 500 }}>
+                  <Dialog.Title>
+                    {t("recommendations.confirmRegenerate")}
+                  </Dialog.Title>
+                  <Dialog.Description size="2" mb="4">
+                    {t("recommendations.regenerateDisclaimer")}
+                  </Dialog.Description>
+
+                  <Flex direction="column" gap="3">
+                    <Callout.Root color="amber" size="2">
+                      <Callout.Icon>
+                        <InfoCircledIcon />
+                      </Callout.Icon>
+                      <Callout.Text>
+                        <Text weight="bold" mb="1" style={{ display: "block" }}>
+                          {t("recommendations.regenerateWarning")}
+                        </Text>
+                        <Text size="2">
+                          {t("recommendations.regenerateWarningDescription")}
+                        </Text>
+                      </Callout.Text>
+                    </Callout.Root>
+
+                    <Flex
+                      direction={{ initial: "column", sm: "row" }}
+                      gap="3"
+                      justify="end"
+                      mt="2"
+                    >
+                      <Dialog.Close>
+                        <Button
+                          variant="soft"
+                          color="gray"
+                          onClick={() => setShowRegenerateConfirmDialog(false)}
+                          className="w-full sm:w-auto"
+                        >
+                          {t("common.cancel")}
+                        </Button>
+                      </Dialog.Close>
+                      <Button
+                        onClick={handleConfirmRegenerate}
+                        disabled={generateClassRecommendation.isPending}
+                        color="amber"
+                        className="w-full sm:w-auto"
+                      >
+                        {generateClassRecommendation.isPending ? (
+                          <>
+                            <Spinner size="1" />{" "}
+                            {t("recommendations.generating")}
+                          </>
+                        ) : (
+                          <>
+                            <ReloadIcon />{" "}
+                            {t("recommendations.confirmRegenerate")}
+                          </>
+                        )}
+                      </Button>
+                    </Flex>
+                  </Flex>
+                </Dialog.Content>
+              </Dialog.Root>
+
               {/* Add Grade Dialog */}
               <Dialog.Root
                 open={editingCell !== null}
@@ -921,11 +1071,20 @@ export function TeacherClassView({ classId }: TeacherClassViewProps) {
                         {t("grades.score")} *
                       </Text>
                       <TextField.Root
-                        type="number"
+                        type="text"
+                        inputMode="numeric"
+                        pattern="\d*"
+                        maxLength={4}
                         value={newScore}
-                        onChange={(e) => setNewScore(e.target.value)}
-                        min="0"
-                        step="0.1"
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          if (value === "" || /^\d*\.?\d*$/.test(value)) {
+                            const digitCount = value.replace(/\./g, "").length;
+                            if (digitCount <= 3) {
+                              setNewScore(value);
+                            }
+                          }
+                        }}
                         required
                       />
                     </Box>
@@ -1109,9 +1268,23 @@ export function TeacherClassView({ classId }: TeacherClassViewProps) {
                               <Box className="table-cell-icon">
                                 <PersonIcon width="12" height="12" />
                               </Box>
-                              <Text weight="bold" style={{ fontWeight: 600 }}>
-                                {enrollment.studentName}
-                              </Text>
+                              {enrollment.studentEmail ? (
+                                <Tooltip content={enrollment.studentEmail}>
+                                  <Text
+                                    weight="bold"
+                                    style={{
+                                      fontWeight: 600,
+                                      cursor: "help",
+                                    }}
+                                  >
+                                    {enrollment.studentName}
+                                  </Text>
+                                </Tooltip>
+                              ) : (
+                                <Text weight="bold" style={{ fontWeight: 600 }}>
+                                  {enrollment.studentName}
+                                </Text>
+                              )}
                             </Flex>
                           </Table.Cell>
                           {assessments.map((assessment) => {
@@ -1308,32 +1481,35 @@ export function TeacherClassView({ classId }: TeacherClassViewProps) {
                         </Flex>
                       </Flex>
                       <Flex align="center" gap="2">
-                        <IconButton
-                          variant="ghost"
-                          size="2"
-                          onClick={(e: React.MouseEvent) => {
-                            e.stopPropagation();
-                            handleGenerateClassRecommendation(true);
-                          }}
-                          disabled={generateClassRecommendation.isPending}
-                          style={{
-                            color: "var(--accent-9)",
-                          }}
-                          title={t("recommendations.regenerate")}
-                        >
-                          <ReloadIcon
-                            width="16"
-                            height="16"
-                            style={{
-                              transform: generateClassRecommendation.isPending
-                                ? "rotate(360deg)"
-                                : "rotate(0deg)",
-                              transition: generateClassRecommendation.isPending
-                                ? "transform 1s linear infinite"
-                                : "transform 0.3s ease",
+                        {isRecommendationsExpanded && (
+                          <IconButton
+                            variant="ghost"
+                            size="2"
+                            onClick={(e: React.MouseEvent) => {
+                              e.stopPropagation();
+                              handleGenerateClassRecommendation(true);
                             }}
-                          />
-                        </IconButton>
+                            disabled={generateClassRecommendation.isPending}
+                            style={{
+                              color: "var(--accent-9)",
+                            }}
+                            title={t("recommendations.regenerate")}
+                          >
+                            <ReloadIcon
+                              width="16"
+                              height="16"
+                              style={{
+                                transform: generateClassRecommendation.isPending
+                                  ? "rotate(360deg)"
+                                  : "rotate(0deg)",
+                                transition:
+                                  generateClassRecommendation.isPending
+                                    ? "transform 1s linear infinite"
+                                    : "transform 0.3s ease",
+                              }}
+                            />
+                          </IconButton>
+                        )}
                         <ChevronDownIcon
                           style={{
                             transform: isRecommendationsExpanded
@@ -1360,10 +1536,10 @@ export function TeacherClassView({ classId }: TeacherClassViewProps) {
                     }}
                   >
                     <Box pt="4" px="4" pb="4">
-                      <Flex direction="column" gap="4">
-                        {classRecommendations.map((recommendation) => (
+                      {generateClassRecommendation.isPending ? (
+                        <Flex direction="column" gap="4">
+                          {/* Skeleton Loading State */}
                           <Card
-                            key={recommendation.id}
                             size="2"
                             style={{
                               background: "var(--gray-2)",
@@ -1374,172 +1550,280 @@ export function TeacherClassView({ classId }: TeacherClassViewProps) {
                             }}
                           >
                             <Flex direction="column" gap="3">
-                              {/* Header with badge */}
+                              {/* Header skeleton */}
                               <Flex align="center" justify="between" gap="2">
                                 <Flex align="center" gap="2">
                                   <Box
                                     style={{
                                       padding: "6px 10px",
                                       borderRadius: "6px",
-                                      background: "var(--blue-3)",
-                                      border: "1px solid var(--blue-5)",
+                                      background: "var(--gray-4)",
+                                      width: "40px",
+                                      height: "26px",
+                                      animation:
+                                        "pulse 1.5s ease-in-out infinite",
                                     }}
-                                  >
-                                    <InfoCircledIcon
-                                      width="14"
-                                      height="14"
-                                      style={{ color: "var(--blue-11)" }}
-                                    />
-                                  </Box>
-                                  <Text
-                                    size="3"
-                                    weight="bold"
-                                    style={{ color: "var(--gray-12)" }}
-                                  >
-                                    {t("recommendations.classPerformance")}
-                                  </Text>
+                                  />
+                                  <Box
+                                    style={{
+                                      width: "200px",
+                                      height: "20px",
+                                      background: "var(--gray-4)",
+                                      borderRadius: "4px",
+                                      animation:
+                                        "pulse 1.5s ease-in-out infinite",
+                                    }}
+                                  />
                                 </Flex>
-                                {recommendation.createdAt && (
-                                  <Text
-                                    size="1"
-                                    color="gray"
-                                    style={{ fontWeight: 500 }}
-                                  >
-                                    {new Date(
-                                      recommendation.createdAt
-                                    ).toLocaleDateString("es-ES", {
-                                      year: "numeric",
-                                      month: "short",
-                                      day: "numeric",
-                                    })}
-                                  </Text>
-                                )}
-                              </Flex>
-
-                              {/* Markdown Content */}
-                              <Box
-                                style={{
-                                  fontSize: "var(--font-size-2)",
-                                  lineHeight: "1.7",
-                                  color: "var(--gray-11)",
-                                }}
-                              >
-                                <ReactMarkdown
-                                  components={{
-                                    p: ({ children }) => (
-                                      <Text
-                                        as="p"
-                                        size="2"
-                                        mb="3"
-                                        style={{
-                                          display: "block",
-                                          color: "var(--gray-11)",
-                                          lineHeight: "1.7",
-                                        }}
-                                      >
-                                        {children}
-                                      </Text>
-                                    ),
-                                    strong: ({ children }) => (
-                                      <Text
-                                        weight="bold"
-                                        style={{ color: "var(--gray-12)" }}
-                                      >
-                                        {children}
-                                      </Text>
-                                    ),
-                                    ul: ({ children }) => (
-                                      <ul
-                                        style={{
-                                          marginBottom: "12px",
-                                          paddingLeft: "20px",
-                                          listStyle: "disc",
-                                          display: "block",
-                                          color: "var(--gray-11)",
-                                        }}
-                                      >
-                                        {children}
-                                      </ul>
-                                    ),
-                                    ol: ({ children }) => (
-                                      <ol
-                                        style={{
-                                          marginBottom: "12px",
-                                          paddingLeft: "20px",
-                                          listStyle: "decimal",
-                                          display: "block",
-                                          color: "var(--gray-11)",
-                                        }}
-                                      >
-                                        {children}
-                                      </ol>
-                                    ),
-                                    li: ({ children }) => (
-                                      <li
-                                        style={{
-                                          marginBottom: "8px",
-                                          lineHeight: "1.7",
-                                          fontSize: "var(--font-size-2)",
-                                          color: "var(--gray-11)",
-                                        }}
-                                      >
-                                        {children}
-                                      </li>
-                                    ),
-                                    h1: ({ children }) => (
-                                      <Text
-                                        as="div"
-                                        size="5"
-                                        weight="bold"
-                                        mb="3"
-                                        mt="4"
-                                        style={{
-                                          display: "block",
-                                          color: "var(--gray-12)",
-                                        }}
-                                      >
-                                        {children}
-                                      </Text>
-                                    ),
-                                    h2: ({ children }) => (
-                                      <Text
-                                        as="div"
-                                        size="4"
-                                        weight="bold"
-                                        mb="2"
-                                        mt="3"
-                                        style={{
-                                          display: "block",
-                                          color: "var(--gray-12)",
-                                        }}
-                                      >
-                                        {children}
-                                      </Text>
-                                    ),
-                                    h3: ({ children }) => (
-                                      <Text
-                                        as="div"
-                                        size="3"
-                                        weight="bold"
-                                        mb="2"
-                                        mt="3"
-                                        style={{
-                                          display: "block",
-                                          color: "var(--gray-12)",
-                                        }}
-                                      >
-                                        {children}
-                                      </Text>
-                                    ),
+                                <Box
+                                  style={{
+                                    width: "80px",
+                                    height: "16px",
+                                    background: "var(--gray-4)",
+                                    borderRadius: "4px",
+                                    animation:
+                                      "pulse 1.5s ease-in-out infinite",
                                   }}
-                                >
-                                  {recommendation.message}
-                                </ReactMarkdown>
-                              </Box>
+                                />
+                              </Flex>
+                              {/* Content skeleton */}
+                              <Flex direction="column" gap="2">
+                                <Box
+                                  style={{
+                                    width: "100%",
+                                    height: "16px",
+                                    background: "var(--gray-4)",
+                                    borderRadius: "4px",
+                                    animation:
+                                      "pulse 1.5s ease-in-out infinite",
+                                  }}
+                                />
+                                <Box
+                                  style={{
+                                    width: "95%",
+                                    height: "16px",
+                                    background: "var(--gray-4)",
+                                    borderRadius: "4px",
+                                    animation:
+                                      "pulse 1.5s ease-in-out infinite",
+                                  }}
+                                />
+                                <Box
+                                  style={{
+                                    width: "90%",
+                                    height: "16px",
+                                    background: "var(--gray-4)",
+                                    borderRadius: "4px",
+                                    animation:
+                                      "pulse 1.5s ease-in-out infinite",
+                                  }}
+                                />
+                                <Box
+                                  style={{
+                                    width: "85%",
+                                    height: "16px",
+                                    background: "var(--gray-4)",
+                                    borderRadius: "4px",
+                                    animation:
+                                      "pulse 1.5s ease-in-out infinite",
+                                  }}
+                                />
+                                <Box
+                                  style={{
+                                    width: "75%",
+                                    height: "16px",
+                                    background: "var(--gray-4)",
+                                    borderRadius: "4px",
+                                    animation:
+                                      "pulse 1.5s ease-in-out infinite",
+                                  }}
+                                />
+                              </Flex>
                             </Flex>
                           </Card>
-                        ))}
-                      </Flex>
+                        </Flex>
+                      ) : (
+                        <Flex direction="column" gap="4">
+                          {classRecommendations.map((recommendation) => (
+                            <Card
+                              key={recommendation.id}
+                              size="2"
+                              style={{
+                                background: "var(--gray-2)",
+                                border: "1px solid var(--gray-4)",
+                                borderRadius: "12px",
+                                padding: "20px",
+                                boxShadow: "0 1px 3px rgba(0, 0, 0, 0.05)",
+                              }}
+                            >
+                              <Flex direction="column" gap="3">
+                                {/* Header with badge */}
+                                <Flex align="center" justify="between" gap="2">
+                                  <Flex align="center" gap="2">
+                                    <Box
+                                      style={{
+                                        padding: "6px 10px",
+                                        borderRadius: "6px",
+                                        background: "var(--blue-3)",
+                                        border: "1px solid var(--blue-5)",
+                                      }}
+                                    >
+                                      <InfoCircledIcon
+                                        width="14"
+                                        height="14"
+                                        style={{ color: "var(--blue-11)" }}
+                                      />
+                                    </Box>
+                                    <Text
+                                      size="3"
+                                      weight="bold"
+                                      style={{ color: "var(--gray-12)" }}
+                                    >
+                                      {t("recommendations.classPerformance")}
+                                    </Text>
+                                  </Flex>
+                                  {recommendation.createdAt && (
+                                    <Text
+                                      size="1"
+                                      color="gray"
+                                      style={{ fontWeight: 500 }}
+                                    >
+                                      {new Date(
+                                        recommendation.createdAt
+                                      ).toLocaleDateString("es-ES", {
+                                        year: "numeric",
+                                        month: "short",
+                                        day: "numeric",
+                                      })}
+                                    </Text>
+                                  )}
+                                </Flex>
+
+                                {/* Markdown Content */}
+                                <Box
+                                  style={{
+                                    fontSize: "var(--font-size-2)",
+                                    lineHeight: "1.7",
+                                    color: "var(--gray-11)",
+                                  }}
+                                >
+                                  <ReactMarkdown
+                                    components={{
+                                      p: ({ children }) => (
+                                        <Text
+                                          as="p"
+                                          size="2"
+                                          mb="3"
+                                          style={{
+                                            display: "block",
+                                            color: "var(--gray-11)",
+                                            lineHeight: "1.7",
+                                          }}
+                                        >
+                                          {children}
+                                        </Text>
+                                      ),
+                                      strong: ({ children }) => (
+                                        <Text
+                                          weight="bold"
+                                          style={{ color: "var(--gray-12)" }}
+                                        >
+                                          {children}
+                                        </Text>
+                                      ),
+                                      ul: ({ children }) => (
+                                        <ul
+                                          style={{
+                                            marginBottom: "12px",
+                                            paddingLeft: "20px",
+                                            listStyle: "disc",
+                                            display: "block",
+                                            color: "var(--gray-11)",
+                                          }}
+                                        >
+                                          {children}
+                                        </ul>
+                                      ),
+                                      ol: ({ children }) => (
+                                        <ol
+                                          style={{
+                                            marginBottom: "12px",
+                                            paddingLeft: "20px",
+                                            listStyle: "decimal",
+                                            display: "block",
+                                            color: "var(--gray-11)",
+                                          }}
+                                        >
+                                          {children}
+                                        </ol>
+                                      ),
+                                      li: ({ children }) => (
+                                        <li
+                                          style={{
+                                            marginBottom: "8px",
+                                            lineHeight: "1.7",
+                                            fontSize: "var(--font-size-2)",
+                                            color: "var(--gray-11)",
+                                          }}
+                                        >
+                                          {children}
+                                        </li>
+                                      ),
+                                      h1: ({ children }) => (
+                                        <Text
+                                          as="div"
+                                          size="5"
+                                          weight="bold"
+                                          mb="3"
+                                          mt="4"
+                                          style={{
+                                            display: "block",
+                                            color: "var(--gray-12)",
+                                          }}
+                                        >
+                                          {children}
+                                        </Text>
+                                      ),
+                                      h2: ({ children }) => (
+                                        <Text
+                                          as="div"
+                                          size="4"
+                                          weight="bold"
+                                          mb="2"
+                                          mt="3"
+                                          style={{
+                                            display: "block",
+                                            color: "var(--gray-12)",
+                                          }}
+                                        >
+                                          {children}
+                                        </Text>
+                                      ),
+                                      h3: ({ children }) => (
+                                        <Text
+                                          as="div"
+                                          size="3"
+                                          weight="bold"
+                                          mb="2"
+                                          mt="3"
+                                          style={{
+                                            display: "block",
+                                            color: "var(--gray-12)",
+                                          }}
+                                        >
+                                          {children}
+                                        </Text>
+                                      ),
+                                    }}
+                                  >
+                                    {recommendation.message}
+                                  </ReactMarkdown>
+                                </Box>
+                              </Flex>
+                            </Card>
+                          ))}
+                        </Flex>
+                      )}
                     </Box>
                   </Box>
                 </Flex>
@@ -1591,8 +1875,7 @@ export function TeacherClassView({ classId }: TeacherClassViewProps) {
                       color="gray"
                       style={{ textAlign: "center", maxWidth: "400px" }}
                     >
-                      Genera recomendaciones basadas en el rendimiento de tu
-                      clase para obtener insights personalizados
+                      {t("recommendations.generateDescription")}
                     </Text>
                   </Flex>
                   <Button

@@ -31,9 +31,11 @@ export default function CreateClassPage() {
   const { data: subjectsData, isLoading: loadingSubjects } = useSubjects();
   const createClass = useCreateClass();
 
+  const currentYear = new Date().getFullYear();
+
   const [formData, setFormData] = useState({
     subjectId: "",
-    year: new Date().getFullYear(),
+    year: currentYear,
     semester: Semester.SUMMER,
     groupCode: "",
     schedule: "",
@@ -63,6 +65,31 @@ export default function CreateClassPage() {
 
     if (!user?.id) {
       setError("User not authenticated");
+      return;
+    }
+
+    // Validate required fields
+    if (!formData.subjectId.trim()) {
+      setError(t("class.subjectRequired") || "Subject is required");
+      return;
+    }
+
+    if (!formData.groupCode.trim()) {
+      setError(t("class.groupCodeRequired") || "Group code is required");
+      return;
+    }
+
+    if (!formData.schedule.trim()) {
+      setError(t("class.scheduleRequired") || "Schedule is required");
+      return;
+    }
+
+    // Validate year is not less than current year
+    if (formData.year < currentYear) {
+      setError(
+        t("class.yearCannotBeLessThanCurrent") ||
+          "Year cannot be less than the current year"
+      );
       return;
     }
 
@@ -205,15 +232,31 @@ export default function CreateClassPage() {
                   <TextField.Root
                     type="number"
                     value={formData.year.toString()}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        year: parseInt(e.target.value),
-                      })
-                    }
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      // Allow empty or valid number input
+                      if (value === "" || /^\d+$/.test(value)) {
+                        const yearValue =
+                          value === "" ? currentYear : parseInt(value);
+                        setFormData({
+                          ...formData,
+                          year: yearValue,
+                        });
+                      }
+                    }}
+                    onBlur={(e) => {
+                      const yearValue = parseInt(e.target.value) || currentYear;
+                      // If the value is less than current year, set it to current year
+                      if (yearValue < currentYear) {
+                        setFormData({
+                          ...formData,
+                          year: currentYear,
+                        });
+                      }
+                    }}
                     required
-                    min="2020"
-                    max="2030"
+                    min={currentYear.toString()}
+                    max={(currentYear + 10).toString()}
                   />
                 </Box>
 

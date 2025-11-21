@@ -18,7 +18,19 @@ function LoginForm() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showSignupSuccess, setShowSignupSuccess] = useState(false);
-  const { login } = useAuth();
+  const { login, isAuthenticated, initializeAuth } = useAuth();
+
+  // Initialize auth state from localStorage on mount
+  useEffect(() => {
+    initializeAuth();
+  }, [initializeAuth]);
+
+  // Redirect to dashboard if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.replace('/dashboard');
+    }
+  }, [isAuthenticated, router]);
 
   useEffect(() => {
     if (searchParams.get('signup') === 'success') {

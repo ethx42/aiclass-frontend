@@ -290,6 +290,7 @@ export interface AiRecommendationResponse {
   classId?: string;
   subjectCode?: string;
   subjectName?: string;
+  gradeId?: string;
   audience: RecommendationAudience;
   message: string;
   metadata?: Record<string, any>;

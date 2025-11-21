@@ -1,43 +1,13 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { recommendationsApi } from '../api/recommendations';
-import { CreateRecommendationDto, RecommendationFilters } from '@/src/types/api';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { recommendationsApi } from "../api/recommendations";
+import { RecommendationFilters } from "@/src/types/api";
 
 export const useRecommendations = (filters: RecommendationFilters) => {
   return useQuery({
-    queryKey: ['recommendations', filters],
+    queryKey: ["recommendations", filters],
     queryFn: () => recommendationsApi.getAll(filters),
     enabled: !!(filters.recipientId || filters.classId || filters.audience),
     refetchInterval: 30000, // Refetch every 30 seconds for new recommendations
-  });
-};
-
-export const useRecommendation = (recommendationId: string) => {
-  return useQuery({
-    queryKey: ['recommendations', recommendationId],
-    queryFn: () => recommendationsApi.getById(recommendationId),
-    enabled: !!recommendationId,
-  });
-};
-
-export const useCreateRecommendation = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (data: CreateRecommendationDto) => recommendationsApi.create(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['recommendations'] });
-    },
-  });
-};
-
-export const useDeleteRecommendation = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (id: string) => recommendationsApi.delete(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['recommendations'] });
-    },
   });
 };
 
@@ -45,10 +15,19 @@ export const useGenerateClassRecommendation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ classId, forceRegenerate }: { classId: string; forceRegenerate?: boolean }) =>
-      recommendationsApi.generateClassRecommendation(classId, forceRegenerate || false),
+    mutationFn: ({
+      classId,
+      forceRegenerate,
+    }: {
+      classId: string;
+      forceRegenerate?: boolean;
+    }) =>
+      recommendationsApi.generateClassRecommendation(
+        classId,
+        forceRegenerate || false
+      ),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['recommendations'] });
+      queryClient.invalidateQueries({ queryKey: ["recommendations"] });
     },
   });
 };
@@ -57,10 +36,22 @@ export const useGenerateStudentRecommendation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ classId, studentId, forceRegenerate }: { classId: string; studentId: string; forceRegenerate?: boolean }) =>
-      recommendationsApi.generateStudentRecommendation(classId, studentId, forceRegenerate || false),
+    mutationFn: ({
+      classId,
+      studentId,
+      forceRegenerate,
+    }: {
+      classId: string;
+      studentId: string;
+      forceRegenerate?: boolean;
+    }) =>
+      recommendationsApi.generateStudentRecommendation(
+        classId,
+        studentId,
+        forceRegenerate || false
+      ),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['recommendations'] });
+      queryClient.invalidateQueries({ queryKey: ["recommendations"] });
     },
   });
 };
@@ -69,10 +60,10 @@ export const useGenerateGradeRecommendation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (gradeId: string) => recommendationsApi.generateGradeRecommendation(gradeId),
+    mutationFn: (gradeId: string) =>
+      recommendationsApi.generateGradeRecommendation(gradeId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['recommendations'] });
+      queryClient.invalidateQueries({ queryKey: ["recommendations"] });
     },
   });
 };
-

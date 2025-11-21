@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Theme } from "@radix-ui/themes";
 import "./globals.css";
 import { Providers } from "./providers";
-import { GlobalAIAssistant } from "@/src/components/GlobalAIAssistant";
 import { Toaster } from "react-hot-toast";
 
 export const metadata: Metadata = {
@@ -26,7 +25,6 @@ export default function RootLayout({
             scaling="100%"
           >
             {children}
-            <GlobalAIAssistant />
             <Toaster
               position="top-right"
               toastOptions={{
