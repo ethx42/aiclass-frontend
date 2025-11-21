@@ -35,10 +35,7 @@ import {
   useCreateGrade,
   useUpdateGrade,
 } from "@/src/lib/hooks/use-grades";
-import {
-  useGenerateClassRecommendation,
-  useGenerateStudentRecommendation,
-} from "@/src/lib/hooks/use-recommendations";
+import { useGenerateClassRecommendation } from "@/src/lib/hooks/use-recommendations";
 import {
   AssessmentKind,
   EnrollmentStatus,
@@ -51,6 +48,13 @@ import {
 import { useT } from "@/src/lib/i18n/provider";
 import toast from "react-hot-toast";
 import ReactMarkdown from "react-markdown";
+
+const getGradeColor = (percentage: number) => {
+  if (percentage >= 90) return "green";
+  if (percentage >= 80) return "blue";
+  if (percentage >= 70) return "orange";
+  return "red";
+};
 
 interface TeacherClassViewProps {
   classId: string;
@@ -91,7 +95,6 @@ export function TeacherClassView({
 
   // AI Recommendations - Use recommendation directly from class response
   const generateClassRecommendation = useGenerateClassRecommendation();
-  const generateStudentRecommendation = useGenerateStudentRecommendation();
 
   // Convert teacherRecommendation to AiRecommendationResponse format if it exists
   const classRecommendation: AiRecommendationResponse | null =
@@ -505,13 +508,40 @@ export function TeacherClassView({
             gap={{ initial: "3", sm: "0" }}
           >
             <Box>
-              <Text size={{ initial: "4", sm: "5" }} weight="bold">
-                {t("grades.gradebook")}
-              </Text>
-              <br />
-              <Text size={{ initial: "2", sm: "2" }} color="gray">
-                {enrollments.length} {t("grades.studentsEnrolled")} ·{" "}
-              </Text>
+              <Flex direction="column" gap="2">
+                <Text size={{ initial: "4", sm: "5" }} weight="bold">
+                  {t("grades.gradebook")}
+                </Text>
+                <Flex
+                  direction={{ initial: "column", sm: "row" }}
+                  gap={{ initial: "2", sm: "4" }}
+                  align={{ initial: "start", sm: "center" }}
+                  wrap="wrap"
+                >
+                  <Text size={{ initial: "2", sm: "2" }} color="gray">
+                    {enrollments.length} {t("grades.studentsEnrolled")}
+                  </Text>
+                  {classAverage !== null && (
+                    <Flex align="center" gap="2">
+                      <Text size={{ initial: "2", sm: "2" }} color="gray">
+                        {t("grades.classAverage")}:
+                      </Text>
+                      <Badge
+                        color={getGradeColor(classAverage)}
+                        size="2"
+                        style={{
+                          fontWeight: 600,
+                          fontSize: "13px",
+                          padding: "4px 12px",
+                          boxShadow: "0 1px 2px rgba(0, 0, 0, 0.05)",
+                        }}
+                      >
+                        {classAverage.toFixed(1)}%
+                      </Badge>
+                    </Flex>
+                  )}
+                </Flex>
+              </Flex>
             </Box>
             <Dialog.Root
               open={isAddAssessmentDialogOpen}
