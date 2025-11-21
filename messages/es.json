@@ -73,6 +73,7 @@
     "subjectRequired": "La materia es requerida",
     "year": "Año",
     "yearCannotBeLessThanCurrent": "El año no puede ser menor que el año actual",
+    "yearCannotBeMoreThanTwoYears": "El año no puede ser más de 2 años desde el año actual",
     "semester": "Semestre",
     "groupCode": "Código de Grupo",
     "groupCodeRequired": "El código de grupo es requerido",

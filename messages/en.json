@@ -73,6 +73,7 @@
     "subjectRequired": "Subject is required",
     "year": "Year",
     "yearCannotBeLessThanCurrent": "Year cannot be less than the current year",
+    "yearCannotBeMoreThanTwoYears": "Year cannot be more than 2 years from the current year",
     "semester": "Semester",
     "groupCode": "Group Code",
     "groupCodeRequired": "Group code is required",

@@ -492,70 +492,35 @@ export function TeacherClassView({ classId }: TeacherClassViewProps) {
 
   return (
     <Box p={{ initial: "4", sm: "6" }}>
-      <Flex direction="column" gap="4">
-        {/* Gradebook Section */}
-        <Card size={{ initial: "2", sm: "4" }}>
-          <Flex direction="column" gap="4">
-            <Flex
-              direction={{ initial: "column", sm: "row" }}
-              justify="between"
-              align={{ initial: "start", sm: "center" }}
-              gap={{ initial: "3", sm: "0" }}
+      <Card size={{ initial: "2", sm: "4" }}>
+        <Flex direction="column" gap="4">
+          <Flex
+            direction={{ initial: "column", sm: "row" }}
+            justify="between"
+            align={{ initial: "start", sm: "center" }}
+            gap={{ initial: "3", sm: "0" }}
+          >
+            <Box>
+              <Text size={{ initial: "4", sm: "5" }} weight="bold">
+                {t("grades.gradebook")}
+              </Text>
+              <br />
+              <Text size={{ initial: "2", sm: "2" }} color="gray">
+                {enrollments.length} {t("grades.studentsEnrolled")} ·{" "}
+              </Text>
+            </Box>
+            <Dialog.Root
+              open={isAddAssessmentDialogOpen}
+              onOpenChange={setIsAddAssessmentDialogOpen}
             >
-              <Box>
-                <Text size={{ initial: "4", sm: "5" }} weight="bold">
-                  {t("grades.gradebook")}
-                </Text>
-                <br />
-                <Flex align="center" gap="2" wrap="wrap">
-                  <Text size={{ initial: "2", sm: "2" }} color="gray">
-                    {enrollments.length} {t("grades.studentsEnrolled")}
-                  </Text>
-                  {classAverage !== null && (
-                    <>
-                      <Text size={{ initial: "2", sm: "2" }} color="gray">
-                        ·
-                      </Text>
-                      <Flex align="center" gap="2">
-                        <BarChartIcon width="14" height="14" />
-                        <Text size={{ initial: "2", sm: "2" }} weight="medium">
-                          {t("grades.classAverage")}:{" "}
-                        </Text>
-                        <Badge
-                          color={
-                            classAverage >= 90
-                              ? "green"
-                              : classAverage >= 80
-                              ? "blue"
-                              : classAverage >= 70
-                              ? "orange"
-                              : "red"
-                          }
-                          style={{
-                            fontWeight: 600,
-                            fontSize: "12px",
-                            padding: "2px 8px",
-                          }}
-                        >
-                          {classAverage.toFixed(1)}%
-                        </Badge>
-                      </Flex>
-                    </>
-                  )}
-                </Flex>
-              </Box>
-              <Dialog.Root
-                open={isAddAssessmentDialogOpen}
-                onOpenChange={setIsAddAssessmentDialogOpen}
-              >
-                <Dialog.Trigger>
-                  <Button
-                    size={{ initial: "2", sm: "3" }}
-                    className="w-full sm:w-auto"
-                  >
-                    <PlusIcon /> {t("grades.addGrade")}
-                  </Button>
-                </Dialog.Trigger>
+              <Dialog.Trigger>
+                <Button
+                  size={{ initial: "2", sm: "3" }}
+                  className="w-full sm:w-auto"
+                >
+                  <PlusIcon /> {t("grades.addGrade")}
+                </Button>
+              </Dialog.Trigger>
 
                 <Dialog.Content style={{ maxWidth: 500 }}>
                   <Dialog.Title>{t("grades.addGrade")}</Dialog.Title>
@@ -1257,42 +1222,28 @@ export function TeacherClassView({ classId }: TeacherClassViewProps) {
                             ).toFixed(1)
                           : "-";
 
-                      return (
-                        <Table.Row key={enrollment.id}>
-                          <Table.Cell>
-                            <Flex
-                              align="center"
-                              gap="2"
-                              className="table-cell-with-icon"
-                            >
-                              <Box className="table-cell-icon">
-                                <PersonIcon width="12" height="12" />
-                              </Box>
-                              {enrollment.studentEmail ? (
-                                <Tooltip content={enrollment.studentEmail}>
-                                  <Text
-                                    weight="bold"
-                                    style={{
-                                      fontWeight: 600,
-                                      cursor: "help",
-                                    }}
-                                  >
-                                    {enrollment.studentName}
-                                  </Text>
-                                </Tooltip>
-                              ) : (
-                                <Text weight="bold" style={{ fontWeight: 600 }}>
-                                  {enrollment.studentName}
-                                </Text>
-                              )}
-                            </Flex>
-                          </Table.Cell>
-                          {assessments.map((assessment) => {
-                            const grade = studentGrades.find(
-                              (g) =>
-                                `${g.assessmentKind}:${g.assessmentName}` ===
-                                assessment
-                            );
+                    return (
+                      <Table.Row key={enrollment.id}>
+                        <Table.Cell>
+                          <Flex
+                            align="center"
+                            gap="2"
+                            className="table-cell-with-icon"
+                          >
+                            <Box className="table-cell-icon">
+                              <PersonIcon width="12" height="12" />
+                            </Box>
+                            <Text weight="bold" style={{ fontWeight: 600 }}>
+                              {enrollment.studentName}
+                            </Text>
+                          </Flex>
+                        </Table.Cell>
+                        {assessments.map((assessment) => {
+                          const grade = studentGrades.find(
+                            (g) =>
+                              `${g.assessmentKind}:${g.assessmentName}` ===
+                              assessment
+                          );
 
                             const isEditingThisCell =
                               editingCell?.studentId === enrollment.studentId &&

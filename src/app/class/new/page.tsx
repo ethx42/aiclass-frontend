@@ -93,6 +93,15 @@ export default function CreateClassPage() {
       return;
     }
 
+    // Validate year is not more than 2 years from current year
+    if (formData.year > currentYear + 2) {
+      setError(
+        t("class.yearCannotBeMoreThanTwoYears") ||
+          "Year cannot be more than 2 years from the current year"
+      );
+      return;
+    }
+
     try {
       await createClass.mutateAsync({
         ...formData,
@@ -234,29 +243,40 @@ export default function CreateClassPage() {
                     value={formData.year.toString()}
                     onChange={(e) => {
                       const value = e.target.value;
-                      // Allow empty or valid number input
+                      // Allow empty or valid number input, max 4 digits
                       if (value === "" || /^\d+$/.test(value)) {
-                        const yearValue =
-                          value === "" ? currentYear : parseInt(value);
-                        setFormData({
-                          ...formData,
-                          year: yearValue,
-                        });
+                        // Limit to 4 digits only
+                        if (value.length <= 4) {
+                          const yearValue =
+                            value === "" ? currentYear : parseInt(value);
+                          setFormData({
+                            ...formData,
+                            year: yearValue,
+                          });
+                        }
                       }
                     }}
                     onBlur={(e) => {
                       const yearValue = parseInt(e.target.value) || currentYear;
+                      const maxYear = currentYear + 2;
                       // If the value is less than current year, set it to current year
                       if (yearValue < currentYear) {
                         setFormData({
                           ...formData,
                           year: currentYear,
                         });
+                      } else if (yearValue > maxYear) {
+                        // If the value is more than 2 years from current, set it to max
+                        setFormData({
+                          ...formData,
+                          year: maxYear,
+                        });
                       }
                     }}
                     required
                     min={currentYear.toString()}
-                    max={(currentYear + 10).toString()}
+                    max={(currentYear + 2).toString()}
+                    maxLength={4}
                   />
                 </Box>
 
