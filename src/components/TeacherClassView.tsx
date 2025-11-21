@@ -413,20 +413,39 @@ export function TeacherClassView({
 
   // Calculate overall class average
   const calculateClassAverage = (): number | null => {
-    if (grades.length === 0 || enrollments.length === 0) return null;
+    if (
+      grades.length === 0 ||
+      enrollments.length === 0 ||
+      assessments.length === 0
+    )
+      return null;
 
     const studentAverages: number[] = [];
 
     enrollments.forEach((enrollment) => {
       const studentGrades = gradesByStudent[enrollment.studentId] || [];
-      if (studentGrades.length > 0) {
-        const average =
-          studentGrades.reduce(
-            (sum, g) => sum + (g.score / g.maxScore) * 100,
-            0
-          ) / studentGrades.length;
-        studentAverages.push(average);
-      }
+      // Create a map of student grades by assessment for quick lookup
+      const gradeMap = new Map<string, GradeResponse>();
+      studentGrades.forEach((grade) => {
+        const key = `${grade.assessmentKind}:${grade.assessmentName}`;
+        gradeMap.set(key, grade);
+      });
+
+      // Calculate average considering all assessments
+      // If student doesn't have a grade for an assessment, it counts as 0%
+      let totalPercentage = 0;
+      assessments.forEach((assessment) => {
+        const grade = gradeMap.get(assessment);
+        if (grade) {
+          totalPercentage += (grade.score / grade.maxScore) * 100;
+        } else {
+          // Missing assessment counts as 0%
+          totalPercentage += 0;
+        }
+      });
+
+      const average = totalPercentage / assessments.length;
+      studentAverages.push(average);
     });
 
     if (studentAverages.length === 0) return null;
@@ -1289,14 +1308,30 @@ export function TeacherClassView({
                   {enrollments.map((enrollment) => {
                     const studentGrades =
                       gradesByStudent[enrollment.studentId] || [];
+
+                    // Create a map of student grades by assessment for quick lookup
+                    const gradeMap = new Map<string, GradeResponse>();
+                    studentGrades.forEach((grade) => {
+                      const key = `${grade.assessmentKind}:${grade.assessmentName}`;
+                      gradeMap.set(key, grade);
+                    });
+
+                    // Calculate average considering all assessments
+                    // If student doesn't have a grade for an assessment, it counts as 0%
+                    let totalPercentage = 0;
+                    assessments.forEach((assessment) => {
+                      const grade = gradeMap.get(assessment);
+                      if (grade) {
+                        totalPercentage += (grade.score / grade.maxScore) * 100;
+                      } else {
+                        // Missing assessment counts as 0%
+                        totalPercentage += 0;
+                      }
+                    });
+
                     const average =
-                      studentGrades.length > 0
-                        ? (
-                            studentGrades.reduce(
-                              (sum, g) => sum + (g.score / g.maxScore) * 100,
-                              0
-                            ) / studentGrades.length
-                          ).toFixed(1)
+                      assessments.length > 0
+                        ? (totalPercentage / assessments.length).toFixed(1)
                         : "-";
 
                     return (
