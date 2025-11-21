@@ -1181,13 +1181,6 @@ export function TeacherClassView({ classId }: TeacherClassViewProps) {
               <Text color="gray" size={{ initial: "2", sm: "3" }}>
                 {t("grades.noGrades")}
               </Text>
-              <Button
-                variant="soft"
-                onClick={() => setIsAddAssessmentDialogOpen(true)}
-                size={{ initial: "2", sm: "3" }}
-              >
-                <PlusIcon /> {t("grades.addFirstGrade")}
-              </Button>
             </Flex>
           ) : (
             <Box style={{ overflowX: "auto" }}>

@@ -185,6 +185,7 @@ export interface EnrollmentResponse {
   subjectName?: string;
   teacherId?: string;
   teacherName?: string;
+  teacherEmail?: string;
   year?: number;
   semester?: Semester;
   groupCode?: string;

@@ -1,6 +1,6 @@
 "use client";
 
-import { Card, Flex, Heading, Text, Badge, Box } from "@radix-ui/themes";
+import { Card, Flex, Heading, Text, Badge, Box, Tooltip } from "@radix-ui/themes";
 import { EnrollmentResponse, EnrollmentStatus, getSemesterDisplay, Semester } from "@/src/types/api";
 import Link from "next/link";
 import { useT } from "@/src/lib/i18n/provider";
@@ -164,17 +164,26 @@ export function EnrollmentCard({ enrollment }: EnrollmentCardProps) {
                   >
                     {enrollment.className}
                   </Heading>
-                  <Text
-                    size="2"
-                    color="gray"
-                    style={{
-                      lineHeight: 1.5,
-                      fontWeight: 400,
-                      opacity: 0.85,
-                    }}
-                  >
-                    {t("class.teacher")}: {enrollment.teacherName || "N/A"}
-                  </Text>
+                  {enrollment.teacherName && (
+                    <Tooltip
+                      content={
+                        enrollment.teacherEmail || enrollment.teacherName
+                      }
+                    >
+                      <Text
+                        size="2"
+                        color="gray"
+                        style={{
+                          lineHeight: 1.5,
+                          fontWeight: 400,
+                          opacity: 0.85,
+                          cursor: enrollment.teacherEmail ? "help" : "default",
+                        }}
+                      >
+                        {t("class.teacher")}: {enrollment.teacherName}
+                      </Text>
+                    </Tooltip>
+                  )}
                 </Box>
               </Flex>
             </Box>
