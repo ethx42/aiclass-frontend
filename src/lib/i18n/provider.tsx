@@ -21,14 +21,48 @@ const messages: Record<Locale, Messages> = {
   es,
 };
 
-export function I18nProvider({ children }: { children: ReactNode }) {
-  const [locale, setLocaleState] = useState<Locale>('en');
+// Detect browser language
+function detectBrowserLocale(): Locale {
+  if (typeof window === 'undefined') {
+    return 'en'; // Server-side fallback
+  }
 
-  // Load locale from localStorage on mount
+  // Try to get the preferred language from the browser
+  const browserLang = navigator.language || (navigator as any).userLanguage;
+  
+  // Check if browser language starts with 'es' (es, es-ES, es-MX, etc.)
+  if (browserLang && browserLang.toLowerCase().startsWith('es')) {
+    return 'es';
+  }
+  
+  // Default to English
+  return 'en';
+}
+
+export function I18nProvider({ children }: { children: ReactNode }) {
+  const [locale, setLocaleState] = useState<Locale>(() => {
+    // Initialize with browser language detection
+    if (typeof window !== 'undefined') {
+      const savedLocale = localStorage.getItem('locale') as Locale;
+      if (savedLocale && (savedLocale === 'en' || savedLocale === 'es')) {
+        return savedLocale;
+      }
+      // If no saved locale, detect from browser
+      return detectBrowserLocale();
+    }
+    return 'en'; // Server-side fallback
+  });
+
+  // Load locale from localStorage on mount (if not already set)
   useEffect(() => {
     const savedLocale = localStorage.getItem('locale') as Locale;
     if (savedLocale && (savedLocale === 'en' || savedLocale === 'es')) {
       setLocaleState(savedLocale);
+    } else {
+      // If no saved locale, detect from browser and save it
+      const detectedLocale = detectBrowserLocale();
+      setLocaleState(detectedLocale);
+      localStorage.setItem('locale', detectedLocale);
     }
   }, []);
 

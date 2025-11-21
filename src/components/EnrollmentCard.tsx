@@ -164,19 +164,17 @@ export function EnrollmentCard({ enrollment }: EnrollmentCardProps) {
                   >
                     {enrollment.className}
                   </Heading>
-                  {enrollment.teacherName && (
-                    <Text
-                      size="2"
-                      color="gray"
-                      style={{
-                        lineHeight: 1.5,
-                        fontWeight: 400,
-                        opacity: 0.85,
-                      }}
-                    >
-                      {enrollment.teacherName}
-                    </Text>
-                  )}
+                  <Text
+                    size="2"
+                    color="gray"
+                    style={{
+                      lineHeight: 1.5,
+                      fontWeight: 400,
+                      opacity: 0.85,
+                    }}
+                  >
+                    {t("class.teacher")}: {enrollment.teacherName || "N/A"}
+                  </Text>
                 </Box>
               </Flex>
             </Box>

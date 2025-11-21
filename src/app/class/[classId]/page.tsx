@@ -333,7 +333,7 @@ export default function ClassDetailPage() {
       {user?.role === UserRole.TEACHER ? (
         <TeacherClassView classId={classId} />
       ) : (
-        <StudentClassView classId={classId} />
+        <StudentClassView classId={classId} teacherName={classData.teacherName} />
       )}
 
       {/* Edit Dialog */}
