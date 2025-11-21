@@ -81,6 +81,7 @@
     "schedule": "Schedule",
     "scheduleRequired": "Schedule is required",
     "schedulePlaceholder": "e.g., Mon/Wed/Fri 10:00-11:30",
+    "optional": "Optional",
     "spring": "Spring",
     "summer": "Summer",
     "fall": "Fall",

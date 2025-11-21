@@ -81,6 +81,7 @@
     "schedule": "Horario",
     "scheduleRequired": "El horario es requerido",
     "schedulePlaceholder": "ej: Lun/Mié/Vie 10:00-11:30",
+    "optional": "Opcional",
     "spring": "Primavera",
     "summer": "Verano",
     "fall": "Otoño",
