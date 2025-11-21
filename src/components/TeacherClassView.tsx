@@ -406,10 +406,26 @@ export function TeacherClassView({
     return acc;
   }, {} as Record<string, GradeResponse[]>);
 
-  // Get unique assessment names
+  // Get unique assessment names and sort by creation date (oldest first, left to right)
   const assessments = Array.from(
     new Set(grades.map((g) => `${g.assessmentKind}:${g.assessmentName}`))
-  );
+  ).sort((a, b) => {
+    // Find the first grade for each assessment to get creation date
+    const gradeA = grades.find(
+      (g) => `${g.assessmentKind}:${g.assessmentName}` === a
+    );
+    const gradeB = grades.find(
+      (g) => `${g.assessmentKind}:${g.assessmentName}` === b
+    );
+
+    if (!gradeA || !gradeB) return 0;
+
+    // Sort by createdAt (oldest first = leftmost)
+    return (
+      new Date(gradeA.createdAt).getTime() -
+      new Date(gradeB.createdAt).getTime()
+    );
+  });
 
   // Calculate overall class average
   const calculateClassAverage = (): number | null => {
