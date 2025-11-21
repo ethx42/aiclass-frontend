@@ -228,6 +228,7 @@ export interface GradeResponse {
   gradedAt: string;
   createdAt: string;
   updatedAt: string;
+  metadata?: Record<string, any>;
 }
 
 export interface CreateGradeDto {
@@ -238,6 +239,7 @@ export interface CreateGradeDto {
   score: number;
   maxScore: number;
   gradedAt: string;
+  metadata?: Record<string, any>;
 }
 
 export interface UpdateGradeDto {
@@ -246,6 +248,7 @@ export interface UpdateGradeDto {
   score?: number;
   maxScore?: number;
   gradedAt?: string;
+  metadata?: Record<string, any>;
 }
 
 // AI Recommendation types

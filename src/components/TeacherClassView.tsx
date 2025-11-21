@@ -15,6 +15,7 @@ import {
   Callout,
   IconButton,
   Badge,
+  Tooltip,
 } from "@radix-ui/themes";
 import {
   PlusIcon,
@@ -25,6 +26,7 @@ import {
   PersonIcon,
   FileTextIcon,
   BarChartIcon,
+  ChatBubbleIcon,
 } from "@radix-ui/react-icons";
 import { useEnrollments } from "@/src/lib/hooks/use-enrollments";
 import {
@@ -36,6 +38,7 @@ import {
   AssessmentKind,
   EnrollmentStatus,
   GradeResponse,
+  CreateGradeDto,
 } from "@/src/types/api";
 import { useT } from "@/src/lib/i18n/provider";
 import toast from "react-hot-toast";
@@ -48,6 +51,7 @@ interface AssessmentFormData {
   assessmentKind: AssessmentKind;
   assessmentName: string;
   maxScore: number;
+  assessmentContent?: string;
 }
 
 export function TeacherClassView({ classId }: TeacherClassViewProps) {
@@ -71,13 +75,16 @@ export function TeacherClassView({ classId }: TeacherClassViewProps) {
 
   const [isAddAssessmentDialogOpen, setIsAddAssessmentDialogOpen] =
     useState(false);
-  const [editingGradeId, setEditingGradeId] = useState<string | null>(null);
+  const [isEditGradeDialogOpen, setIsEditGradeDialogOpen] = useState(false);
+  const [editingGrade, setEditingGrade] = useState<GradeResponse | null>(null);
   const [editingCell, setEditingCell] = useState<{
     studentId: string;
     assessment: string;
   } | null>(null);
   const [editScore, setEditScore] = useState("");
+  const [editFeedback, setEditFeedback] = useState("");
   const [newScore, setNewScore] = useState("");
+  const [newFeedback, setNewFeedback] = useState("");
   const [error, setError] = useState("");
 
   const [assessmentFormData, setAssessmentFormData] =
@@ -85,6 +92,7 @@ export function TeacherClassView({ classId }: TeacherClassViewProps) {
       assessmentKind: AssessmentKind.EXAM,
       assessmentName: "",
       maxScore: 100,
+      assessmentContent: "",
     });
 
   const enrollments = enrollmentsData?.data?.content || [];
@@ -107,7 +115,7 @@ export function TeacherClassView({ classId }: TeacherClassViewProps) {
     }
 
     try {
-      await createGrade.mutateAsync({
+      const gradeData: CreateGradeDto = {
         classId,
         studentId: firstStudent.studentId,
         assessmentKind: assessmentFormData.assessmentKind,
@@ -115,12 +123,20 @@ export function TeacherClassView({ classId }: TeacherClassViewProps) {
         score: 0,
         maxScore: assessmentFormData.maxScore,
         gradedAt: new Date().toISOString(),
-      });
+        ...(assessmentFormData.assessmentContent?.trim() && {
+          metadata: {
+            assessmentContent: assessmentFormData.assessmentContent.trim(),
+          },
+        }),
+      };
+
+      await createGrade.mutateAsync(gradeData);
       setIsAddAssessmentDialogOpen(false);
       setAssessmentFormData({
         assessmentKind: AssessmentKind.EXAM,
         assessmentName: "",
         maxScore: 100,
+        assessmentContent: "",
       });
       toast.success(t("grades.assessmentCreated"));
     } catch (err: unknown) {
@@ -133,20 +149,43 @@ export function TeacherClassView({ classId }: TeacherClassViewProps) {
   };
 
   const handleEditGrade = (grade: GradeResponse) => {
-    setEditingGradeId(grade.id);
+    setEditingGrade(grade);
     setEditScore(grade.score.toString());
+    setEditFeedback(grade.metadata?.feedback || grade.metadata?.teacherFeedback || "");
+    setIsEditGradeDialogOpen(true);
   };
 
-  const handleSaveEdit = async (gradeId: string) => {
+  const handleSaveEdit = async () => {
+    if (!editingGrade) return;
+
     try {
+      const updateData: any = {
+        score: parseFloat(editScore),
+      };
+
+      // Include feedback in metadata if provided
+      if (editFeedback.trim()) {
+        updateData.metadata = {
+          ...editingGrade.metadata,
+          feedback: editFeedback.trim(),
+          teacherFeedback: editFeedback.trim(),
+        };
+      } else if (editingGrade.metadata) {
+        // Preserve existing metadata but remove feedback if empty
+        const { feedback, teacherFeedback, ...restMetadata } = editingGrade.metadata;
+        if (Object.keys(restMetadata).length > 0) {
+          updateData.metadata = restMetadata;
+        }
+      }
+
       await updateGrade.mutateAsync({
-        id: gradeId,
-        data: {
-          score: parseFloat(editScore),
-        },
+        id: editingGrade.id,
+        data: updateData,
       });
-      setEditingGradeId(null);
+      setIsEditGradeDialogOpen(false);
+      setEditingGrade(null);
       setEditScore("");
+      setEditFeedback("");
       toast.success(t("grades.gradeUpdated"));
     } catch (err) {
       console.error("Failed to update grade:", err);
@@ -155,8 +194,10 @@ export function TeacherClassView({ classId }: TeacherClassViewProps) {
   };
 
   const handleCancelEdit = () => {
-    setEditingGradeId(null);
+    setIsEditGradeDialogOpen(false);
+    setEditingGrade(null);
     setEditScore("");
+    setEditFeedback("");
   };
 
   const handleCellClick = (studentId: string, assessment: string) => {
@@ -177,7 +218,7 @@ export function TeacherClassView({ classId }: TeacherClassViewProps) {
     const maxScore = existingGrade?.maxScore || 100;
 
     try {
-      await createGrade.mutateAsync({
+      const gradeData: CreateGradeDto = {
         classId,
         studentId: editingCell.studentId,
         assessmentKind: kind as AssessmentKind,
@@ -185,9 +226,18 @@ export function TeacherClassView({ classId }: TeacherClassViewProps) {
         score: parseFloat(newScore),
         maxScore,
         gradedAt: new Date().toISOString(),
-      });
+        ...(newFeedback.trim() && {
+          metadata: {
+            feedback: newFeedback.trim(),
+            teacherFeedback: newFeedback.trim(),
+          },
+        }),
+      };
+
+      await createGrade.mutateAsync(gradeData);
       setEditingCell(null);
       setNewScore("");
+      setNewFeedback("");
       toast.success(t("grades.gradeAdded"));
     } catch (err) {
       console.error("Failed to add grade:", err);
@@ -198,6 +248,7 @@ export function TeacherClassView({ classId }: TeacherClassViewProps) {
   const handleCancelNewGrade = () => {
     setEditingCell(null);
     setNewScore("");
+    setNewFeedback("");
   };
 
   // Group grades by student
@@ -214,6 +265,18 @@ export function TeacherClassView({ classId }: TeacherClassViewProps) {
   const assessments = Array.from(
     new Set(grades.map((g) => `${g.assessmentKind}:${g.assessmentName}`))
   );
+
+  // Helper function to get assessment content for a given assessment
+  const getAssessmentContent = (assessment: string): string | null => {
+    const [kind, name] = assessment.split(":");
+    const gradeWithContent = grades.find(
+      (g) =>
+        g.assessmentKind === kind &&
+        g.assessmentName === name &&
+        g.metadata?.assessmentContent
+    );
+    return gradeWithContent?.metadata?.assessmentContent || null;
+  };
 
   if (loadingEnrollments || loadingGrades) {
     return (
@@ -333,6 +396,36 @@ export function TeacherClassView({ classId }: TeacherClassViewProps) {
                     />
                   </Box>
 
+                  <Box>
+                    <Text as="label" size="2" weight="bold" mb="1">
+                      {t("grades.assessmentContent")}
+                    </Text>
+                    <textarea
+                      placeholder={t("grades.assessmentContentPlaceholder")}
+                      value={assessmentFormData.assessmentContent || ""}
+                      onChange={(e) =>
+                        setAssessmentFormData({
+                          ...assessmentFormData,
+                          assessmentContent: e.target.value,
+                        })
+                      }
+                      rows={4}
+                      style={{
+                        width: "100%",
+                        padding: "8px 12px",
+                        borderRadius: "6px",
+                        border: "1px solid var(--gray-6)",
+                        fontSize: "14px",
+                        fontFamily: "inherit",
+                        resize: "vertical",
+                        minHeight: "80px",
+                      }}
+                    />
+                    <Text size="1" color="gray" mt="1">
+                      {t("grades.assessmentContentHint")}
+                    </Text>
+                  </Box>
+
                   <Callout.Root color="blue" size="1">
                     <Callout.Icon>
                       <InfoCircledIcon />
@@ -368,6 +461,188 @@ export function TeacherClassView({ classId }: TeacherClassViewProps) {
                       {createGrade.isPending
                         ? t("class.creating")
                         : t("common.create") + " " + t("grades.assessment")}
+                    </Button>
+                  </Flex>
+                </Flex>
+              </Dialog.Content>
+            </Dialog.Root>
+
+            {/* Edit Grade Dialog */}
+            <Dialog.Root
+              open={isEditGradeDialogOpen}
+              onOpenChange={setIsEditGradeDialogOpen}
+            >
+              <Dialog.Content style={{ maxWidth: 500 }}>
+                <Dialog.Title>{t("grades.editGrade")}</Dialog.Title>
+                <Dialog.Description size="2" mb="4">
+                  {editingGrade && `${t("grades.student")}: ${enrollments.find(e => e.studentId === editingGrade.studentId)?.studentName || ""}`}
+                </Dialog.Description>
+
+                <Flex direction="column" gap="3">
+                  {error && (
+                    <Callout.Root color="red" size="1">
+                      <Callout.Icon>
+                        <InfoCircledIcon />
+                      </Callout.Icon>
+                      <Callout.Text>{error}</Callout.Text>
+                    </Callout.Root>
+                  )}
+
+                  <Box>
+                    <Text as="label" size="2" weight="bold" mb="1">
+                      {t("grades.score")} *
+                    </Text>
+                    <TextField.Root
+                      type="number"
+                      value={editScore}
+                      onChange={(e) => setEditScore(e.target.value)}
+                      min="0"
+                      step="0.1"
+                      required
+                    />
+                  </Box>
+
+                  <Box>
+                    <Text as="label" size="2" weight="bold" mb="1">
+                      {t("grades.feedback")}
+                    </Text>
+                    <textarea
+                      placeholder={t("grades.feedbackPlaceholder")}
+                      value={editFeedback}
+                      onChange={(e) => setEditFeedback(e.target.value)}
+                      rows={4}
+                      style={{
+                        width: "100%",
+                        padding: "8px 12px",
+                        borderRadius: "6px",
+                        border: "1px solid var(--gray-6)",
+                        fontSize: "14px",
+                        fontFamily: "inherit",
+                        resize: "vertical",
+                        minHeight: "80px",
+                      }}
+                    />
+                    <Text size="1" color="gray" mt="1">
+                      {t("grades.feedbackHint")}
+                    </Text>
+                  </Box>
+
+                  <Flex
+                    direction={{ initial: "column", sm: "row" }}
+                    gap="3"
+                    justify="end"
+                    mt="2"
+                  >
+                    <Dialog.Close>
+                      <Button
+                        variant="soft"
+                        color="gray"
+                        onClick={handleCancelEdit}
+                        className="w-full sm:w-auto"
+                      >
+                        {t("common.cancel")}
+                      </Button>
+                    </Dialog.Close>
+                    <Button
+                      onClick={handleSaveEdit}
+                      disabled={updateGrade.isPending || !editScore}
+                      className="w-full sm:w-auto"
+                    >
+                      {updateGrade.isPending
+                        ? t("common.saving")
+                        : t("common.save")}
+                    </Button>
+                  </Flex>
+                </Flex>
+              </Dialog.Content>
+            </Dialog.Root>
+
+            {/* Add Grade Dialog */}
+            <Dialog.Root
+              open={editingCell !== null}
+              onOpenChange={(open) => {
+                if (!open) handleCancelNewGrade();
+              }}
+            >
+              <Dialog.Content style={{ maxWidth: 500 }}>
+                <Dialog.Title>{t("grades.enterGradeInfo")}</Dialog.Title>
+                <Dialog.Description size="2" mb="4">
+                  {editingCell && `${t("grades.student")}: ${enrollments.find(e => e.studentId === editingCell.studentId)?.studentName || ""}`}
+                </Dialog.Description>
+
+                <Flex direction="column" gap="3">
+                  {error && (
+                    <Callout.Root color="red" size="1">
+                      <Callout.Icon>
+                        <InfoCircledIcon />
+                      </Callout.Icon>
+                      <Callout.Text>{error}</Callout.Text>
+                    </Callout.Root>
+                  )}
+
+                  <Box>
+                    <Text as="label" size="2" weight="bold" mb="1">
+                      {t("grades.score")} *
+                    </Text>
+                    <TextField.Root
+                      type="number"
+                      value={newScore}
+                      onChange={(e) => setNewScore(e.target.value)}
+                      min="0"
+                      step="0.1"
+                      required
+                    />
+                  </Box>
+
+                  <Box>
+                    <Text as="label" size="2" weight="bold" mb="1">
+                      {t("grades.feedback")}
+                    </Text>
+                    <textarea
+                      placeholder={t("grades.feedbackPlaceholder")}
+                      value={newFeedback}
+                      onChange={(e) => setNewFeedback(e.target.value)}
+                      rows={4}
+                      style={{
+                        width: "100%",
+                        padding: "8px 12px",
+                        borderRadius: "6px",
+                        border: "1px solid var(--gray-6)",
+                        fontSize: "14px",
+                        fontFamily: "inherit",
+                        resize: "vertical",
+                        minHeight: "80px",
+                      }}
+                    />
+                    <Text size="1" color="gray" mt="1">
+                      {t("grades.feedbackHint")}
+                    </Text>
+                  </Box>
+
+                  <Flex
+                    direction={{ initial: "column", sm: "row" }}
+                    gap="3"
+                    justify="end"
+                    mt="2"
+                  >
+                    <Dialog.Close>
+                      <Button
+                        variant="soft"
+                        color="gray"
+                        onClick={handleCancelNewGrade}
+                        className="w-full sm:w-auto"
+                      >
+                        {t("common.cancel")}
+                      </Button>
+                    </Dialog.Close>
+                    <Button
+                      onClick={handleSaveNewGrade}
+                      disabled={createGrade.isPending || !newScore}
+                      className="w-full sm:w-auto"
+                    >
+                      {createGrade.isPending
+                        ? t("common.saving")
+                        : t("common.save")}
                     </Button>
                   </Flex>
                 </Flex>
@@ -414,14 +689,28 @@ export function TeacherClassView({ classId }: TeacherClassViewProps) {
                         {t("grades.student")}
                       </Flex>
                     </Table.ColumnHeaderCell>
-                    {assessments.map((assessment) => (
-                      <Table.ColumnHeaderCell key={assessment}>
-                        <Flex align="center" gap="2">
-                          <FileTextIcon width="14" height="14" />
-                          {assessment.split(":")[1]}
-                        </Flex>
-                      </Table.ColumnHeaderCell>
-                    ))}
+                    {assessments.map((assessment) => {
+                      const assessmentContent = getAssessmentContent(assessment);
+                      const assessmentName = assessment.split(":")[1];
+                      
+                      return (
+                        <Table.ColumnHeaderCell key={assessment}>
+                          {assessmentContent ? (
+                            <Tooltip content={assessmentContent}>
+                              <Flex align="center" gap="2" style={{ cursor: "help" }}>
+                                <FileTextIcon width="14" height="14" />
+                                {assessmentName}
+                              </Flex>
+                            </Tooltip>
+                          ) : (
+                            <Flex align="center" gap="2">
+                              <FileTextIcon width="14" height="14" />
+                              {assessmentName}
+                            </Flex>
+                          )}
+                        </Table.ColumnHeaderCell>
+                      );
+                    })}
                     <Table.ColumnHeaderCell>
                       <Flex align="center" gap="2">
                         <BarChartIcon width="14" height="14" />
@@ -472,101 +761,37 @@ export function TeacherClassView({ classId }: TeacherClassViewProps) {
                             <Table.Cell key={assessment}>
                               {grade ? (
                                 <Flex align="center" gap="2">
-                                  {editingGradeId === grade.id ? (
-                                    <>
-                                      <TextField.Root
-                                        size="1"
-                                        type="number"
-                                        value={editScore}
-                                        onChange={(e) =>
-                                          setEditScore(e.target.value)
-                                        }
-                                        onFocus={(e) => e.target.select()}
-                                        onKeyDown={(e) => {
-                                          if (e.key === "Enter") {
-                                            e.preventDefault();
-                                            handleSaveEdit(grade.id);
-                                          } else if (e.key === "Escape") {
-                                            e.preventDefault();
-                                            handleCancelEdit();
-                                          }
-                                        }}
-                                        style={{ width: "60px" }}
-                                        step="0.1"
-                                        autoFocus
+                                  <Text>{grade.score}</Text>
+                                  {grade.metadata?.feedback || grade.metadata?.teacherFeedback ? (
+                                    <Tooltip content={grade.metadata.feedback || grade.metadata.teacherFeedback}>
+                                      <ChatBubbleIcon 
+                                        width="14" 
+                                        height="14" 
+                                        style={{ 
+                                          color: "var(--accent-9)", 
+                                          cursor: "help",
+                                          flexShrink: 0 
+                                        }} 
                                       />
-                                      <IconButton
-                                        size="1"
-                                        variant="soft"
-                                        color="green"
-                                        onClick={() => handleSaveEdit(grade.id)}
-                                      >
-                                        <CheckIcon />
-                                      </IconButton>
-                                      <IconButton
-                                        size="1"
-                                        variant="soft"
-                                        color="red"
-                                        onClick={handleCancelEdit}
-                                      >
-                                        <Cross2Icon />
-                                      </IconButton>
-                                    </>
-                                  ) : (
-                                    <>
-                                      <Text>{grade.score}</Text>
-                                      <IconButton
-                                        size="1"
-                                        variant="ghost"
-                                        onClick={() => handleEditGrade(grade)}
-                                      >
-                                        <Pencil1Icon />
-                                      </IconButton>
-                                    </>
-                                  )}
+                                    </Tooltip>
+                                  ) : null}
+                                  <IconButton
+                                    size="1"
+                                    variant="ghost"
+                                    onClick={() => handleEditGrade(grade)}
+                                  >
+                                    <Pencil1Icon />
+                                  </IconButton>
                                 </Flex>
                               ) : isEditingThisCell ? (
-                                <Flex align="center" gap="2">
-                                  <TextField.Root
-                                    size="1"
-                                    type="number"
-                                    value={newScore}
-                                    onChange={(e) =>
-                                      setNewScore(e.target.value)
-                                    }
-                                    onFocus={(e) => e.target.select()}
-                                    onKeyDown={(e) => {
-                                      if (e.key === "Enter" && newScore) {
-                                        e.preventDefault();
-                                        handleSaveNewGrade();
-                                      } else if (e.key === "Escape") {
-                                        e.preventDefault();
-                                        handleCancelNewGrade();
-                                      }
-                                    }}
-                                    placeholder="Score"
-                                    style={{ width: "60px" }}
-                                    step="0.1"
-                                    autoFocus
-                                  />
-                                  <IconButton
-                                    size="1"
-                                    variant="soft"
-                                    color="green"
-                                    onClick={handleSaveNewGrade}
-                                    disabled={!newScore}
-                                  >
-                                    <CheckIcon />
-                                  </IconButton>
-                                  <IconButton
-                                    size="1"
-                                    variant="soft"
-                                    color="red"
-                                    onClick={handleCancelNewGrade}
-                                  >
-                                    <Cross2Icon />
-                                  </IconButton>
-                                </Flex>
+                                <Button
+                                  size="1"
+                                  variant="soft"
+                                  onClick={handleSaveNewGrade}
+                                  disabled={!newScore}
+                                >
+                                  {t("grades.enterGradeInfo")}
+                                </Button>
                               ) : (
                                 <Box
                                   onClick={() =>

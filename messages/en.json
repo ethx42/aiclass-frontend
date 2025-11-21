@@ -3,6 +3,7 @@
     "loading": "Loading...",
     "error": "Error",
     "save": "Save",
+    "saving": "Saving...",
     "cancel": "Cancel",
     "edit": "Edit",
     "delete": "Delete",
@@ -129,6 +130,9 @@
     "student": "Student",
     "assessmentType": "Assessment Type",
     "assessmentName": "Assessment Name",
+    "assessmentContent": "Assessment Content",
+    "assessmentContentPlaceholder": "Describe what this assessment covers (e.g., Chapters 1-5, Topics: Data Structures, etc.)",
+    "assessmentContentHint": "Optional: Provide details about the assessment content. This helps students understand what to study and improves AI recommendations.",
     "score": "Score",
     "maxScore": "Max Score",
     "average": "Average",
@@ -159,7 +163,11 @@
     "failedToAdd": "Failed to add grade",
     "failedToCreate": "Failed to create assessment",
     "recommendationDismissed": "Recommendation dismissed",
-    "failedToDismiss": "Failed to dismiss recommendation"
+    "failedToDismiss": "Failed to dismiss recommendation",
+    "editGrade": "Edit Grade",
+    "feedback": "Feedback",
+    "feedbackPlaceholder": "Add personalized feedback for this student...",
+    "feedbackHint": "Optional: Provide specific feedback to help the student improve."
   },
   "subjects": {
     "manageSubjects": "Manage Subjects",

@@ -9,6 +9,7 @@ import {
   Badge,
   Spinner,
   Callout,
+  Tooltip,
 } from "@radix-ui/themes";
 import {
   InfoCircledIcon,
@@ -218,14 +219,27 @@ export function StudentClassView({ classId }: StudentClassViewProps) {
                         return (
                           <Table.Row key={grade.id}>
                             <Table.Cell>
-                              <Flex align="center" gap="2" className="table-cell-with-icon">
-                                <Box className="table-cell-icon">
-                                  <FileTextIcon width="12" height="12" />
-                                </Box>
-                                <Text weight="bold" style={{ fontWeight: 600 }}>
-                                  {grade.assessmentName}
-                                </Text>
-                              </Flex>
+                              {grade.metadata?.assessmentContent ? (
+                                <Tooltip content={grade.metadata.assessmentContent}>
+                                  <Flex align="center" gap="2" className="table-cell-with-icon" style={{ cursor: "help" }}>
+                                    <Box className="table-cell-icon">
+                                      <FileTextIcon width="12" height="12" />
+                                    </Box>
+                                    <Text weight="bold" style={{ fontWeight: 600 }}>
+                                      {grade.assessmentName}
+                                    </Text>
+                                  </Flex>
+                                </Tooltip>
+                              ) : (
+                                <Flex align="center" gap="2" className="table-cell-with-icon">
+                                  <Box className="table-cell-icon">
+                                    <FileTextIcon width="12" height="12" />
+                                  </Box>
+                                  <Text weight="bold" style={{ fontWeight: 600 }}>
+                                    {grade.assessmentName}
+                                  </Text>
+                                </Flex>
+                              )}
                             </Table.Cell>
                             <Table.Cell>
                               <Badge

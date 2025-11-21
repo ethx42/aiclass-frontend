@@ -3,6 +3,7 @@
     "loading": "Cargando...",
     "error": "Error",
     "save": "Guardar",
+    "saving": "Guardando...",
     "cancel": "Cancelar",
     "edit": "Editar",
     "delete": "Eliminar",
@@ -129,6 +130,9 @@
     "student": "Estudiante",
     "assessmentType": "Tipo de Evaluación",
     "assessmentName": "Nombre de Evaluación",
+    "assessmentContent": "Contenido de la Evaluación",
+    "assessmentContentPlaceholder": "Describe qué cubre esta evaluación (ej: Capítulos 1-5, Temas: Estructuras de Datos, etc.)",
+    "assessmentContentHint": "Opcional: Proporciona detalles sobre el contenido de la evaluación. Esto ayuda a los estudiantes a entender qué estudiar y mejora las recomendaciones de IA.",
     "score": "Puntuación",
     "maxScore": "Puntuación Máxima",
     "average": "Promedio",
@@ -159,7 +163,11 @@
     "failedToAdd": "Error al agregar la calificación",
     "failedToCreate": "Error al crear la evaluación",
     "recommendationDismissed": "Recomendación descartada",
-    "failedToDismiss": "Error al descartar la recomendación"
+    "failedToDismiss": "Error al descartar la recomendación",
+    "editGrade": "Editar Calificación",
+    "feedback": "Comentarios",
+    "feedbackPlaceholder": "Agrega comentarios personalizados para este estudiante...",
+    "feedbackHint": "Opcional: Proporciona comentarios específicos para ayudar al estudiante a mejorar."
   },
   "subjects": {
     "manageSubjects": "Gestionar Materias",
