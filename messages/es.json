@@ -169,6 +169,22 @@
     "feedbackPlaceholder": "Agrega comentarios personalizados para este estudiante...",
     "feedbackHint": "Opcional: Proporciona comentarios específicos para ayudar al estudiante a mejorar."
   },
+  "recommendations": {
+    "aiRecommendations": "Recomendaciones de IA",
+    "generateClassRecommendation": "Generar Recomendación de Clase",
+    "generateStudentRecommendation": "Generar Recomendación de Estudiante",
+    "classRecommendationGenerated": "Recomendación de clase generada exitosamente",
+    "classRecommendationRegenerated": "Recomendación de clase regenerada exitosamente",
+    "studentRecommendationGenerated": "Recomendación de estudiante generada exitosamente",
+    "failedToGenerate": "Error al generar recomendación",
+    "generating": "Generando...",
+    "regenerate": "Regenerar recomendación",
+    "classPerformance": "Análisis de Rendimiento de la Clase",
+    "studentPerformance": "Análisis de Rendimiento del Estudiante",
+    "noClassRecommendations": "Aún no hay recomendaciones a nivel de clase. ¡Genera una para comenzar!",
+    "noStudentRecommendations": "Aún no hay recomendaciones a nivel de estudiante. ¡Genera una para comenzar!",
+    "noRecommendations": "Aún no hay recomendaciones. Haz clic en el botón de arriba para generar insights impulsados por IA para tu clase."
+  },
   "subjects": {
     "manageSubjects": "Gestionar Materias",
     "createAndManage": "Crea y gestiona materias de cursos",

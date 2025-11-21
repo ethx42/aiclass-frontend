@@ -169,6 +169,22 @@
     "feedbackPlaceholder": "Add personalized feedback for this student...",
     "feedbackHint": "Optional: Provide specific feedback to help the student improve."
   },
+  "recommendations": {
+    "aiRecommendations": "AI Recommendations",
+    "generateClassRecommendation": "Generate Class Recommendation",
+    "generateStudentRecommendation": "Generate Student Recommendation",
+    "classRecommendationGenerated": "Class recommendation generated successfully",
+    "classRecommendationRegenerated": "Class recommendation regenerated successfully",
+    "studentRecommendationGenerated": "Student recommendation generated successfully",
+    "failedToGenerate": "Failed to generate recommendation",
+    "generating": "Generating...",
+    "regenerate": "Regenerate recommendation",
+    "classPerformance": "Class Performance Analysis",
+    "studentPerformance": "Student Performance Analysis",
+    "noClassRecommendations": "No class-level recommendations yet. Generate one to get started!",
+    "noStudentRecommendations": "No student-level recommendations yet. Generate one to get started!",
+    "noRecommendations": "No recommendations yet. Click the button above to generate AI-powered insights for your class."
+  },
   "subjects": {
     "manageSubjects": "Manage Subjects",
     "createAndManage": "Create and manage course subjects",
