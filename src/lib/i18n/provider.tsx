@@ -40,21 +40,14 @@ function detectBrowserLocale(): Locale {
 }
 
 export function I18nProvider({ children }: { children: ReactNode }) {
-  const [locale, setLocaleState] = useState<Locale>(() => {
-    // Initialize with browser language detection
-    if (typeof window !== 'undefined') {
-      const savedLocale = localStorage.getItem('locale') as Locale;
-      if (savedLocale && (savedLocale === 'en' || savedLocale === 'es')) {
-        return savedLocale;
-      }
-      // If no saved locale, detect from browser
-      return detectBrowserLocale();
-    }
-    return 'en'; // Server-side fallback
-  });
+  // Always start with 'en' to match server-side rendering
+  // This prevents hydration mismatches
+  const [locale, setLocaleState] = useState<Locale>('en');
+  const [isHydrated, setIsHydrated] = useState(false);
 
-  // Load locale from localStorage on mount (if not already set)
+  // Load locale from localStorage or detect browser language after hydration
   useEffect(() => {
+    setIsHydrated(true);
     const savedLocale = localStorage.getItem('locale') as Locale;
     if (savedLocale && (savedLocale === 'en' || savedLocale === 'es')) {
       setLocaleState(savedLocale);

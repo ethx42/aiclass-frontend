@@ -1,26 +1,5 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { recommendationsApi } from "../api/recommendations";
-import { RecommendationFilters } from "@/src/types/api";
-
-export const useRecommendations = (filters: RecommendationFilters) => {
-  // Create a stable query key from filters to avoid unnecessary re-renders
-  const queryKey = [
-    "recommendations",
-    filters.recipientId,
-    filters.classId,
-    filters.audience,
-    filters.page,
-    filters.size,
-  ];
-
-  return useQuery({
-    queryKey,
-    queryFn: () => recommendationsApi.getAll(filters),
-    enabled: !!(filters.recipientId || filters.classId || filters.audience),
-    // Removed refetchInterval to prevent excessive API calls
-    // If needed, can be re-enabled with a longer interval or made configurable
-  });
-};
 
 export const useGenerateClassRecommendation = () => {
   const queryClient = useQueryClient();
@@ -74,7 +53,8 @@ export const useGenerateGradeRecommendation = () => {
     mutationFn: (gradeId: string) =>
       recommendationsApi.generateGradeRecommendation(gradeId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["recommendations"] });
+      // Invalidate grades query to refetch with updated recommendation
+      queryClient.invalidateQueries({ queryKey: ["grades"] });
     },
   });
 };

@@ -108,6 +108,7 @@ export default function ClassDetailPage() {
         subjectName: enrollment.subjectName || enrollment.className,
         teacherId: enrollment.teacherId || "",
         teacherName: enrollment.teacherName || "",
+        teacherEmail: enrollment.teacherEmail,
         year: enrollment.year || new Date().getFullYear(),
         semester: enrollment.semester || Semester.SUMMER,
         groupCode: enrollment.groupCode || "",
@@ -333,7 +334,11 @@ export default function ClassDetailPage() {
       {user?.role === UserRole.TEACHER ? (
         <TeacherClassView classId={classId} />
       ) : (
-        <StudentClassView classId={classId} teacherName={classData.teacherName} />
+        <StudentClassView
+          classId={classId}
+          teacherName={classData.teacherName}
+          teacherEmail={classData.teacherEmail}
+        />
       )}
 
       {/* Edit Dialog */}

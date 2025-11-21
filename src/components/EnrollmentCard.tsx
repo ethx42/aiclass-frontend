@@ -165,11 +165,7 @@ export function EnrollmentCard({ enrollment }: EnrollmentCardProps) {
                     {enrollment.className}
                   </Heading>
                   {enrollment.teacherName && (
-                    <Tooltip
-                      content={
-                        enrollment.teacherEmail || enrollment.teacherName
-                      }
-                    >
+                    <Flex direction="column" gap="1">
                       <Text
                         size="2"
                         color="gray"
@@ -177,12 +173,24 @@ export function EnrollmentCard({ enrollment }: EnrollmentCardProps) {
                           lineHeight: 1.5,
                           fontWeight: 400,
                           opacity: 0.85,
-                          cursor: enrollment.teacherEmail ? "help" : "default",
                         }}
                       >
                         {t("class.teacher")}: {enrollment.teacherName}
                       </Text>
-                    </Tooltip>
+                      {enrollment.teacherEmail && (
+                        <Text
+                          size="1"
+                          color="gray"
+                          style={{
+                            lineHeight: 1.4,
+                            fontWeight: 400,
+                            opacity: 0.7,
+                          }}
+                        >
+                          {enrollment.teacherEmail}
+                        </Text>
+                      )}
+                    </Flex>
                   )}
                 </Box>
               </Flex>

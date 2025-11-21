@@ -36,7 +36,6 @@ import {
   useUpdateGrade,
 } from "@/src/lib/hooks/use-grades";
 import {
-  useRecommendations,
   useGenerateClassRecommendation,
   useGenerateStudentRecommendation,
 } from "@/src/lib/hooks/use-recommendations";
@@ -46,7 +45,7 @@ import {
   GradeResponse,
   CreateGradeDto,
   UpdateGradeDto,
-  RecommendationAudience,
+  AiRecommendationResponse,
 } from "@/src/types/api";
 import { useT } from "@/src/lib/i18n/provider";
 import toast from "react-hot-toast";
@@ -82,25 +81,13 @@ export function TeacherClassView({ classId }: TeacherClassViewProps) {
   const createGrade = useCreateGrade();
   const updateGrade = useUpdateGrade();
 
-  // AI Recommendations
-  const { data: recommendationsData } = useRecommendations({
-    classId,
-    page: 0,
-    size: 10,
-  });
+  // AI Recommendations - Store generated recommendations in local state
+  const [classRecommendation, setClassRecommendation] =
+    useState<AiRecommendationResponse | null>(null);
   const generateClassRecommendation = useGenerateClassRecommendation();
   const generateStudentRecommendation = useGenerateStudentRecommendation();
 
-  // Filter for teacher recommendations for this class (audience TEACHER)
-  // Backend returns "teacher" in lowercase, so we compare case-insensitively
-  const classRecommendations =
-    recommendationsData?.data?.content?.filter((r) => {
-      const audienceMatch =
-        r.audience?.toUpperCase() ===
-        RecommendationAudience.TEACHER.toUpperCase();
-      const classMatch = r.classId === classId;
-      return audienceMatch && classMatch;
-    }) || [];
+  const classRecommendations = classRecommendation ? [classRecommendation] : [];
 
   const [isAddAssessmentDialogOpen, setIsAddAssessmentDialogOpen] =
     useState(false);
@@ -460,11 +447,14 @@ export function TeacherClassView({ classId }: TeacherClassViewProps) {
 
     // Regular generation (no confirmation needed)
     try {
-      await generateClassRecommendation.mutateAsync({
+      const response = await generateClassRecommendation.mutateAsync({
         classId,
         forceRegenerate: false,
       });
-      // No need to manually refetch - invalidateQueries in onSuccess already triggers refetch
+      // Store the generated recommendation in local state
+      if (response?.data) {
+        setClassRecommendation(response.data);
+      }
       toast.success(t("recommendations.classRecommendationGenerated"));
     } catch (err) {
       console.error("Failed to generate recommendation:", err);
@@ -475,11 +465,14 @@ export function TeacherClassView({ classId }: TeacherClassViewProps) {
   const handleConfirmRegenerate = async () => {
     setShowRegenerateConfirmDialog(false);
     try {
-      await generateClassRecommendation.mutateAsync({
+      const response = await generateClassRecommendation.mutateAsync({
         classId,
         forceRegenerate: true,
       });
-      // No need to manually refetch - invalidateQueries in onSuccess already triggers refetch
+      // Store the regenerated recommendation in local state
+      if (response?.data) {
+        setClassRecommendation(response.data);
+      }
       toast.success(t("recommendations.classRecommendationRegenerated"));
     } catch (err) {
       console.error("Failed to regenerate recommendation:", err);
@@ -1273,9 +1266,23 @@ export function TeacherClassView({ classId }: TeacherClassViewProps) {
                             <Box className="table-cell-icon">
                               <PersonIcon width="12" height="12" />
                             </Box>
-                            <Text weight="bold" style={{ fontWeight: 600 }}>
-                              {enrollment.studentName}
-                            </Text>
+                            {enrollment.studentEmail ? (
+                              <Tooltip content={enrollment.studentEmail}>
+                                <Text
+                                  weight="bold"
+                                  style={{
+                                    fontWeight: 600,
+                                    cursor: "help",
+                                  }}
+                                >
+                                  {enrollment.studentName}
+                                </Text>
+                              </Tooltip>
+                            ) : (
+                              <Text weight="bold" style={{ fontWeight: 600 }}>
+                                {enrollment.studentName}
+                              </Text>
+                            )}
                           </Flex>
                         </Table.Cell>
                         {assessments.map((assessment) => {

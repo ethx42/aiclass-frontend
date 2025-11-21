@@ -130,6 +130,7 @@ export interface ClassResponse {
   subjectCode: string;
   teacherId: string;
   teacherName: string;
+  teacherEmail?: string;
   year: number;
   semester: Semester;
   groupCode: string;
@@ -231,6 +232,11 @@ export interface Grade {
 }
 
 // Flattened grade response from API
+export interface GradeRecommendation {
+  id: string;
+  message: string;
+}
+
 export interface GradeResponse {
   id: string;
   classId: string;
@@ -244,6 +250,7 @@ export interface GradeResponse {
   createdAt: string;
   updatedAt: string;
   metadata?: Record<string, any>;
+  recommendation?: GradeRecommendation | null;
 }
 
 export interface CreateGradeDto {
