@@ -11,7 +11,7 @@ export const useAuth = () => {
     
     if (result.success && result.accessToken && result.authUserId && result.user) {
       setAuth(result.accessToken, result.authUserId, result.user);
-      router.push('/dashboard');
+      router.replace('/dashboard');
       return { success: true };
     }
     
@@ -23,7 +23,7 @@ export const useAuth = () => {
     
     if (result.success && result.accessToken && result.authUserId && result.user) {
       setAuth(result.accessToken, result.authUserId, result.user);
-      router.push('/dashboard');
+      router.replace('/dashboard');
       return { success: true };
     }
     

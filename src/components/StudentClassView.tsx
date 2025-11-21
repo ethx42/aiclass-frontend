@@ -1,14 +1,20 @@
 "use client";
 
+import { useState } from "react";
 import {
   Box,
   Card,
   Flex,
+  Grid,
   Table,
   Text,
   Badge,
   Spinner,
   Callout,
+  Tooltip,
+  Button,
+  IconButton,
+  Dialog,
 } from "@radix-ui/themes";
 import {
   InfoCircledIcon,
@@ -17,14 +23,27 @@ import {
   StarIcon,
   BarChartIcon,
   CalendarIcon,
+  MagicWandIcon,
+  PersonIcon,
 } from "@radix-ui/react-icons";
 import { useAuthStore } from "@/src/lib/stores/auth-store";
 import { useGrades } from "@/src/lib/hooks/use-grades";
-import { AssessmentKind } from "@/src/types/api";
+import {
+  AssessmentKind,
+  RecommendationAudience,
+  GradeResponse,
+} from "@/src/types/api";
 import { useT } from "@/src/lib/i18n/provider";
+import {
+  useRecommendations,
+  useGenerateGradeRecommendation,
+} from "@/src/lib/hooks/use-recommendations";
+import ReactMarkdown from "react-markdown";
+import toast from "react-hot-toast";
 
 interface StudentClassViewProps {
   classId: string;
+  teacherName?: string;
 }
 
 const getAssessmentColor = (kind: AssessmentKind) => {
@@ -49,7 +68,10 @@ const getGradeColor = (percentage: number) => {
   return "red";
 };
 
-export function StudentClassView({ classId }: StudentClassViewProps) {
+export function StudentClassView({
+  classId,
+  teacherName,
+}: StudentClassViewProps) {
   const t = useT();
   const user = useAuthStore((state) => state.user);
 
@@ -63,6 +85,66 @@ export function StudentClassView({ classId }: StudentClassViewProps) {
     page: 0,
     size: 1000, // Get all grades to filter by classId in frontend
   });
+
+  // AI Recommendations
+  const { data: recommendationsData } = useRecommendations({
+    classId,
+    recipientId: user?.id,
+    page: 0,
+    size: 100,
+  });
+  const generateGradeRecommendation = useGenerateGradeRecommendation();
+
+  // Filter for student recommendations for this class (audience STUDENT)
+  // Only used for assessment-specific recommendations (by gradeId)
+  const studentRecommendations =
+    recommendationsData?.data?.content?.filter((r) => {
+      const audienceMatch =
+        r.audience?.toUpperCase() ===
+        RecommendationAudience.STUDENT.toUpperCase();
+      const classMatch = r.classId === classId;
+      const recipientMatch = r.recipientId === user?.id;
+      return audienceMatch && classMatch && recipientMatch;
+    }) || [];
+  const [selectedGrade, setSelectedGrade] = useState<GradeResponse | null>(
+    null
+  );
+  const [isAssessmentModalOpen, setIsAssessmentModalOpen] = useState(false);
+
+  // Get recommendation for a specific assessment/grade
+  const getAssessmentRecommendation = (grade: GradeResponse) => {
+    return studentRecommendations.find((r) => {
+      // Check if recommendation is for this specific grade by gradeId (directly in response or in metadata)
+      const gradeIdMatch =
+        r.gradeId === grade.id || r.metadata?.gradeId === grade.id;
+      // Fallback: check by assessment kind and name in metadata
+      const assessmentMatch =
+        r.metadata?.assessmentKind === grade.assessmentKind &&
+        r.metadata?.assessmentName === grade.assessmentName;
+      return gradeIdMatch || assessmentMatch;
+    });
+  };
+
+  const handleOpenAssessmentModal = (grade: GradeResponse) => {
+    setSelectedGrade(grade);
+    setIsAssessmentModalOpen(true);
+  };
+
+  const handleGenerateAssessmentRecommendation = async (
+    grade: GradeResponse
+  ) => {
+    if (!user?.id) return;
+
+    try {
+      // Use the grade-specific endpoint to generate recommendation for this assessment
+      await generateGradeRecommendation.mutateAsync(grade.id);
+      // No need to manually refetch - invalidateQueries in onSuccess already triggers refetch
+      toast.success(t("recommendations.studentRecommendationGenerated"));
+    } catch (err) {
+      console.error("Failed to generate recommendation:", err);
+      toast.error(t("recommendations.failedToGenerate"));
+    }
+  };
 
   if (isLoading) {
     return (
@@ -116,6 +198,21 @@ export function StudentClassView({ classId }: StudentClassViewProps) {
             <Text size={{ initial: "4", sm: "5" }} weight="bold">
               {t("grades.performanceSummary")}
             </Text>
+            {teacherName && (
+              <Flex align="center" gap="2" mb="2">
+                <PersonIcon
+                  width="16"
+                  height="16"
+                  style={{ color: "var(--gray-11)" }}
+                />
+                <Text size={{ initial: "2", sm: "3" }} color="gray">
+                  {t("class.teacher")}:{" "}
+                  <Text weight="bold" style={{ color: "var(--gray-12)" }}>
+                    {teacherName}
+                  </Text>
+                </Text>
+              </Flex>
+            )}
             <Flex gap={{ initial: "4", sm: "6" }} wrap="wrap">
               <Box>
                 <Text size={{ initial: "2", sm: "2" }} color="gray" mb="1">
@@ -200,6 +297,12 @@ export function StudentClassView({ classId }: StudentClassViewProps) {
                           {t("grades.date")}
                         </Flex>
                       </Table.ColumnHeaderCell>
+                      <Table.ColumnHeaderCell style={{ width: "80px" }}>
+                        <Flex align="center" gap="2">
+                          <MagicWandIcon width="14" height="14" />
+                          {t("recommendations.aiRecommendations")}
+                        </Flex>
+                      </Table.ColumnHeaderCell>
                     </Table.Row>
                   </Table.Header>
 
@@ -218,14 +321,44 @@ export function StudentClassView({ classId }: StudentClassViewProps) {
                         return (
                           <Table.Row key={grade.id}>
                             <Table.Cell>
-                              <Flex align="center" gap="2" className="table-cell-with-icon">
-                                <Box className="table-cell-icon">
-                                  <FileTextIcon width="12" height="12" />
-                                </Box>
-                                <Text weight="bold" style={{ fontWeight: 600 }}>
-                                  {grade.assessmentName}
-                                </Text>
-                              </Flex>
+                              {grade.metadata?.assessmentContent ? (
+                                <Tooltip
+                                  content={grade.metadata.assessmentContent}
+                                >
+                                  <Flex
+                                    align="center"
+                                    gap="2"
+                                    className="table-cell-with-icon"
+                                    style={{ cursor: "help" }}
+                                  >
+                                    <Box className="table-cell-icon">
+                                      <FileTextIcon width="12" height="12" />
+                                    </Box>
+                                    <Text
+                                      weight="bold"
+                                      style={{ fontWeight: 600 }}
+                                    >
+                                      {grade.assessmentName}
+                                    </Text>
+                                  </Flex>
+                                </Tooltip>
+                              ) : (
+                                <Flex
+                                  align="center"
+                                  gap="2"
+                                  className="table-cell-with-icon"
+                                >
+                                  <Box className="table-cell-icon">
+                                    <FileTextIcon width="12" height="12" />
+                                  </Box>
+                                  <Text
+                                    weight="bold"
+                                    style={{ fontWeight: 600 }}
+                                  >
+                                    {grade.assessmentName}
+                                  </Text>
+                                </Flex>
+                              )}
                             </Table.Cell>
                             <Table.Cell>
                               <Badge
@@ -245,7 +378,10 @@ export function StudentClassView({ classId }: StudentClassViewProps) {
                             </Table.Cell>
                             <Table.Cell>
                               <Flex align="center" gap="2">
-                                <Text weight="medium" style={{ fontWeight: 500 }}>
+                                <Text
+                                  weight="medium"
+                                  style={{ fontWeight: 500 }}
+                                >
                                   {grade.score} / {grade.maxScore}
                                 </Text>
                               </Flex>
@@ -264,14 +400,64 @@ export function StudentClassView({ classId }: StudentClassViewProps) {
                               </Badge>
                             </Table.Cell>
                             <Table.Cell>
-                              <Flex align="center" gap="2" className="table-cell-with-icon">
+                              <Flex
+                                align="center"
+                                gap="2"
+                                className="table-cell-with-icon"
+                              >
                                 <Box className="table-cell-icon">
                                   <CalendarIcon width="12" height="12" />
                                 </Box>
                                 <Text size="2" color="gray">
-                                  {new Date(grade.gradedAt).toLocaleDateString()}
+                                  {new Date(
+                                    grade.gradedAt
+                                  ).toLocaleDateString()}
                                 </Text>
                               </Flex>
+                            </Table.Cell>
+                            <Table.Cell>
+                              {(() => {
+                                const hasRecommendation =
+                                  getAssessmentRecommendation(grade);
+                                return (
+                                  <Tooltip
+                                    content={
+                                      hasRecommendation
+                                        ? t(
+                                            "recommendations.viewRecommendation"
+                                          ) ||
+                                          "View AI recommendation for this assessment"
+                                        : t(
+                                            "recommendations.generateAssessmentRecommendation"
+                                          ) ||
+                                          "Generate AI recommendation for this assessment"
+                                    }
+                                  >
+                                    <IconButton
+                                      size="1"
+                                      variant="ghost"
+                                      onClick={() =>
+                                        handleOpenAssessmentModal(grade)
+                                      }
+                                      style={{
+                                        color: hasRecommendation
+                                          ? "var(--blue-9)"
+                                          : "var(--accent-9)",
+                                        cursor: "pointer",
+                                      }}
+                                    >
+                                      {hasRecommendation ? (
+                                        <InfoCircledIcon
+                                          width="14"
+                                          height="14"
+                                        />
+                                      ) : (
+                                        <MagicWandIcon width="14" height="14" />
+                                      )}
+                                    </IconButton>
+                                  </Tooltip>
+                                );
+                              })()}
                             </Table.Cell>
                           </Table.Row>
                         );
@@ -330,6 +516,282 @@ export function StudentClassView({ classId }: StudentClassViewProps) {
             </Flex>
           </Card>
         )}
+
+        {/* Assessment Recommendation Modal */}
+        <Dialog.Root
+          open={isAssessmentModalOpen}
+          onOpenChange={setIsAssessmentModalOpen}
+        >
+          <Dialog.Content style={{ maxWidth: 650 }}>
+            {selectedGrade && (
+              <>
+                <Dialog.Title>{selectedGrade.assessmentName}</Dialog.Title>
+                <Dialog.Description size="2" mb="3">
+                  {t("recommendations.assessmentRecommendationDescription") ||
+                    "Assessment details and AI recommendations"}
+                </Dialog.Description>
+
+                <Flex direction="column" gap="3">
+                  {/* Assessment Information - Compact Grid */}
+                  <Card size="2" style={{ padding: "12px" }}>
+                    <Grid columns="2" gap="3">
+                      <Box>
+                        <Text size="1" color="gray" mb="1">
+                          {t("grades.type")}:{" "}
+                        </Text>
+                        <Badge
+                          color={getAssessmentColor(
+                            selectedGrade.assessmentKind
+                          )}
+                          style={{
+                            fontWeight: 600,
+                            fontSize: "10px",
+                            padding: "3px 8px",
+                          }}
+                        >
+                          {t(
+                            `grades.${selectedGrade.assessmentKind.toLowerCase()}`
+                          )}
+                        </Badge>
+                      </Box>
+                      <Box>
+                        <Text size="1" color="gray" mb="1">
+                          {t("grades.date")}:{" "}
+                        </Text>
+                        <Text size="2" weight="medium">
+                          {new Date(
+                            selectedGrade.gradedAt
+                          ).toLocaleDateString()}
+                        </Text>
+                      </Box>
+                      <Box>
+                        <Text size="1" color="gray" mb="1">
+                          {t("grades.score")}:{" "}
+                        </Text>
+                        <Text size="2" weight="bold">
+                          {selectedGrade.score} / {selectedGrade.maxScore}
+                        </Text>
+                      </Box>
+                      <Box>
+                        <Text size="1" color="gray" mb="1">
+                          {t("grades.percentage")}:{" "}
+                        </Text>
+                        <Badge
+                          color={getGradeColor(
+                            parseFloat(
+                              (
+                                (selectedGrade.score / selectedGrade.maxScore) *
+                                100
+                              ).toFixed(1)
+                            )
+                          )}
+                          style={{
+                            fontWeight: 600,
+                            fontSize: "10px",
+                            padding: "3px 8px",
+                          }}
+                        >
+                          {(
+                            (selectedGrade.score / selectedGrade.maxScore) *
+                            100
+                          ).toFixed(1)}
+                          %
+                        </Badge>
+                      </Box>
+                    </Grid>
+                    {(selectedGrade.metadata?.assessmentContent ||
+                      selectedGrade.metadata?.feedback ||
+                      selectedGrade.metadata?.teacherFeedback) && (
+                      <Box
+                        mt="3"
+                        pt="3"
+                        style={{ borderTop: "1px solid var(--gray-4)" }}
+                      >
+                        {selectedGrade.metadata?.assessmentContent && (
+                          <Box mb="2">
+                            <Text size="1" color="gray" mb="1" weight="medium">
+                              {t("grades.assessmentContent")}:&nbsp;
+                            </Text>
+                            <Text size="2" style={{ lineHeight: "1.5" }}>
+                              {selectedGrade.metadata.assessmentContent}
+                            </Text>
+                          </Box>
+                        )}
+                        {(selectedGrade.metadata?.feedback ||
+                          selectedGrade.metadata?.teacherFeedback) && (
+                          <Box>
+                            <Text size="1" color="gray" mb="1" weight="medium">
+                              {t("grades.feedback")}:&nbsp;
+                            </Text>
+                            <Text size="2" style={{ lineHeight: "1.5" }}>
+                              {selectedGrade.metadata.feedback ||
+                                selectedGrade.metadata.teacherFeedback}
+                            </Text>
+                          </Box>
+                        )}
+                      </Box>
+                    )}
+                  </Card>
+
+                  {/* AI Recommendation */}
+                  <Card size="2" style={{ padding: "12px" }}>
+                    <Flex direction="column" gap="2">
+                      <Flex align="center" gap="2">
+                        <MagicWandIcon
+                          width="16"
+                          height="16"
+                          style={{ color: "var(--accent-9)" }}
+                        />
+                        <Text size="3" weight="bold">
+                          {t("recommendations.aiRecommendations")}
+                        </Text>
+                      </Flex>
+
+                      {generateGradeRecommendation.isPending ? (
+                        <Flex align="center" justify="center" py="3">
+                          <Spinner size="2" />
+                          <Text size="2" color="gray" ml="2">
+                            {t("recommendations.generating")}
+                          </Text>
+                        </Flex>
+                      ) : getAssessmentRecommendation(selectedGrade) ? (
+                        <Box
+                          style={{
+                            fontSize: "var(--font-size-2)",
+                            lineHeight: "1.6",
+                            color: "var(--gray-11)",
+                          }}
+                        >
+                          <ReactMarkdown
+                            components={{
+                              p: ({ children }) => (
+                                <Text
+                                  as="p"
+                                  size="2"
+                                  mb="2"
+                                  style={{
+                                    display: "block",
+                                    color: "var(--gray-11)",
+                                    lineHeight: "1.6",
+                                  }}
+                                >
+                                  {children}
+                                </Text>
+                              ),
+                              strong: ({ children }) => (
+                                <Text
+                                  weight="bold"
+                                  style={{ color: "var(--gray-12)" }}
+                                >
+                                  {children}
+                                </Text>
+                              ),
+                              ul: ({ children }) => (
+                                <ul
+                                  style={{
+                                    marginBottom: "10px",
+                                    paddingLeft: "18px",
+                                    listStyle: "disc",
+                                    display: "block",
+                                    color: "var(--gray-11)",
+                                  }}
+                                >
+                                  {children}
+                                </ul>
+                              ),
+                              ol: ({ children }) => (
+                                <ol
+                                  style={{
+                                    marginBottom: "10px",
+                                    paddingLeft: "18px",
+                                    listStyle: "decimal",
+                                    display: "block",
+                                    color: "var(--gray-11)",
+                                  }}
+                                >
+                                  {children}
+                                </ol>
+                              ),
+                              li: ({ children }) => (
+                                <li
+                                  style={{
+                                    marginBottom: "6px",
+                                    lineHeight: "1.6",
+                                    fontSize: "var(--font-size-2)",
+                                    color: "var(--gray-11)",
+                                  }}
+                                >
+                                  {children}
+                                </li>
+                              ),
+                            }}
+                          >
+                            {
+                              getAssessmentRecommendation(selectedGrade)
+                                ?.message
+                            }
+                          </ReactMarkdown>
+                        </Box>
+                      ) : (
+                        <Flex
+                          direction="column"
+                          align="center"
+                          justify="center"
+                          gap="2"
+                          py="3"
+                        >
+                          <Text
+                            size="2"
+                            color="gray"
+                            style={{ textAlign: "center" }}
+                          >
+                            {t("recommendations.noAssessmentRecommendation") ||
+                              "No recommendation generated yet for this assessment."}
+                          </Text>
+                          <Button
+                            size="2"
+                            onClick={() =>
+                              handleGenerateAssessmentRecommendation(
+                                selectedGrade
+                              )
+                            }
+                            disabled={generateGradeRecommendation.isPending}
+                            style={{
+                              background: "var(--accent-9)",
+                              fontWeight: 600,
+                            }}
+                          >
+                            {generateGradeRecommendation.isPending ? (
+                              <>
+                                <Spinner size="1" />{" "}
+                                {t("recommendations.generating")}
+                              </>
+                            ) : (
+                              <>
+                                <MagicWandIcon />{" "}
+                                {t(
+                                  "recommendations.generateAssessmentRecommendation"
+                                ) || "Generate Recommendation"}
+                              </>
+                            )}
+                          </Button>
+                        </Flex>
+                      )}
+                    </Flex>
+                  </Card>
+                </Flex>
+
+                <Flex justify="end" mt="3">
+                  <Dialog.Close>
+                    <Button variant="soft" color="gray" size="2">
+                      {t("common.close") || "Close"}
+                    </Button>
+                  </Dialog.Close>
+                </Flex>
+              </>
+            )}
+          </Dialog.Content>
+        </Dialog.Root>
       </Flex>
     </Box>
   );

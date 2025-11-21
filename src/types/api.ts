@@ -95,6 +95,20 @@ export enum Semester {
   WINTER = "WINTER",
 }
 
+// Helper function to get semester display value in UI
+// Verano (SUMMER) -> "A", Invierno (WINTER) -> "B"
+export const getSemesterDisplay = (semester: Semester): string => {
+  switch (semester) {
+    case Semester.SUMMER:
+      return "A";
+    case Semester.WINTER:
+      return "B";
+    default:
+      // Fallback para semestres antiguos que puedan existir
+      return semester === Semester.SPRING ? "A" : semester === Semester.FALL ? "B" : "A";
+  }
+};
+
 export interface Class {
   id: string;
   subject: Subject;
@@ -228,6 +242,7 @@ export interface GradeResponse {
   gradedAt: string;
   createdAt: string;
   updatedAt: string;
+  metadata?: Record<string, any>;
 }
 
 export interface CreateGradeDto {
@@ -238,6 +253,7 @@ export interface CreateGradeDto {
   score: number;
   maxScore: number;
   gradedAt: string;
+  metadata?: Record<string, any>;
 }
 
 export interface UpdateGradeDto {
@@ -246,6 +262,7 @@ export interface UpdateGradeDto {
   score?: number;
   maxScore?: number;
   gradedAt?: string;
+  metadata?: Record<string, any>;
 }
 
 // AI Recommendation types
@@ -273,6 +290,7 @@ export interface AiRecommendationResponse {
   classId?: string;
   subjectCode?: string;
   subjectName?: string;
+  gradeId?: string;
   audience: RecommendationAudience;
   message: string;
   metadata?: Record<string, any>;

@@ -31,10 +31,12 @@ export default function CreateClassPage() {
   const { data: subjectsData, isLoading: loadingSubjects } = useSubjects();
   const createClass = useCreateClass();
 
+  const currentYear = new Date().getFullYear();
+
   const [formData, setFormData] = useState({
     subjectId: "",
-    year: new Date().getFullYear(),
-    semester: Semester.SPRING,
+    year: currentYear,
+    semester: Semester.SUMMER,
     groupCode: "",
     schedule: "",
   });
@@ -63,6 +65,40 @@ export default function CreateClassPage() {
 
     if (!user?.id) {
       setError("User not authenticated");
+      return;
+    }
+
+    // Validate required fields
+    if (!formData.subjectId.trim()) {
+      setError(t("class.subjectRequired") || "Subject is required");
+      return;
+    }
+
+    if (!formData.groupCode.trim()) {
+      setError(t("class.groupCodeRequired") || "Group code is required");
+      return;
+    }
+
+    if (!formData.schedule.trim()) {
+      setError(t("class.scheduleRequired") || "Schedule is required");
+      return;
+    }
+
+    // Validate year is not less than current year
+    if (formData.year < currentYear) {
+      setError(
+        t("class.yearCannotBeLessThanCurrent") ||
+          "Year cannot be less than the current year"
+      );
+      return;
+    }
+
+    // Validate year is not more than 2 years from current year
+    if (formData.year > currentYear + 2) {
+      setError(
+        t("class.yearCannotBeMoreThanTwoYears") ||
+          "Year cannot be more than 2 years from the current year"
+      );
       return;
     }
 
@@ -205,15 +241,42 @@ export default function CreateClassPage() {
                   <TextField.Root
                     type="number"
                     value={formData.year.toString()}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        year: parseInt(e.target.value),
-                      })
-                    }
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      // Allow empty or valid number input, max 4 digits
+                      if (value === "" || /^\d+$/.test(value)) {
+                        // Limit to 4 digits only
+                        if (value.length <= 4) {
+                          const yearValue =
+                            value === "" ? currentYear : parseInt(value);
+                          setFormData({
+                            ...formData,
+                            year: yearValue,
+                          });
+                        }
+                      }
+                    }}
+                    onBlur={(e) => {
+                      const yearValue = parseInt(e.target.value) || currentYear;
+                      const maxYear = currentYear + 2;
+                      // If the value is less than current year, set it to current year
+                      if (yearValue < currentYear) {
+                        setFormData({
+                          ...formData,
+                          year: currentYear,
+                        });
+                      } else if (yearValue > maxYear) {
+                        // If the value is more than 2 years from current, set it to max
+                        setFormData({
+                          ...formData,
+                          year: maxYear,
+                        });
+                      }
+                    }}
                     required
-                    min="2020"
-                    max="2030"
+                    min={currentYear.toString()}
+                    max={(currentYear + 2).toString()}
+                    maxLength={4}
                   />
                 </Box>
 
@@ -231,18 +294,8 @@ export default function CreateClassPage() {
                   >
                     <Select.Trigger style={{ width: "100%" }} />
                     <Select.Content>
-                      <Select.Item value={Semester.SPRING}>
-                        {t("class.spring")}
-                      </Select.Item>
-                      <Select.Item value={Semester.SUMMER}>
-                        {t("class.summer")}
-                      </Select.Item>
-                      <Select.Item value={Semester.FALL}>
-                        {t("class.fall")}
-                      </Select.Item>
-                      <Select.Item value={Semester.WINTER}>
-                        {t("class.winter")}
-                      </Select.Item>
+                      <Select.Item value={Semester.SUMMER}>A</Select.Item>
+                      <Select.Item value={Semester.WINTER}>B</Select.Item>
                     </Select.Content>
                   </Select.Root>
                 </Box>
@@ -265,7 +318,7 @@ export default function CreateClassPage() {
                 {/* Schedule */}
                 <Box>
                   <Text as="label" size="2" weight="bold" mb="1">
-                    {t("class.schedule")} ({t("class.optional")})
+                    {t("class.schedule")}*
                   </Text>
                   <TextField.Root
                     placeholder={t("class.schedulePlaceholder")}
@@ -273,6 +326,7 @@ export default function CreateClassPage() {
                     onChange={(e) =>
                       setFormData({ ...formData, schedule: e.target.value })
                     }
+                    required
                   />
                 </Box>
 

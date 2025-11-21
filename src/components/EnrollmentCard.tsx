@@ -1,7 +1,7 @@
 "use client";
 
 import { Card, Flex, Heading, Text, Badge, Box } from "@radix-ui/themes";
-import { EnrollmentResponse, EnrollmentStatus } from "@/src/types/api";
+import { EnrollmentResponse, EnrollmentStatus, getSemesterDisplay, Semester } from "@/src/types/api";
 import Link from "next/link";
 import { useT } from "@/src/lib/i18n/provider";
 import {
@@ -164,19 +164,17 @@ export function EnrollmentCard({ enrollment }: EnrollmentCardProps) {
                   >
                     {enrollment.className}
                   </Heading>
-                  {enrollment.teacherName && (
-                    <Text
-                      size="2"
-                      color="gray"
-                      style={{
-                        lineHeight: 1.5,
-                        fontWeight: 400,
-                        opacity: 0.85,
-                      }}
-                    >
-                      {enrollment.teacherName}
-                    </Text>
-                  )}
+                  <Text
+                    size="2"
+                    color="gray"
+                    style={{
+                      lineHeight: 1.5,
+                      fontWeight: 400,
+                      opacity: 0.85,
+                    }}
+                  >
+                    {t("class.teacher")}: {enrollment.teacherName || "N/A"}
+                  </Text>
                 </Box>
               </Flex>
             </Box>
@@ -229,7 +227,7 @@ export function EnrollmentCard({ enrollment }: EnrollmentCardProps) {
                 </Box>
                 <Text size="2" color="gray" style={{ fontWeight: 500 }}>
                   {enrollment.semester &&
-                    t(`class.${enrollment.semester.toLowerCase()}`)}{" "}
+                    getSemesterDisplay(enrollment.semester as Semester)}{" "}
                   {enrollment.year}
                 </Text>
               </Flex>
